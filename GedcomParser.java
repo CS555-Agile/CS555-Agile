@@ -316,7 +316,7 @@ public class GedcomParser {
     }
 
     public void createID(String value, String tag) throws ParseException {
-
+    	Date current=new Date();
         if (tag.equals("NAME")) {
             Indiobj.setName(value);
         }
@@ -325,7 +325,7 @@ public class GedcomParser {
             Indiobj.setGender(value);
         }
 
-        if (birt) {
+        if (birt) {//igonre this for now shubham, not working now, will try solving tommorw
             birt = false;
             SimpleDateFormat f = new SimpleDateFormat("dd MMM yyyy");
             Date bday = f.parse(value);
@@ -336,7 +336,9 @@ public class GedcomParser {
             long diff = TimeUnit.DAYS.convert(diffM, TimeUnit.MILLISECONDS);
             int years = (int) diff / 365;
             Indiobj.setAge("" + years + "");
+            
         }
+        
 
         if (tag.equals("BIRT")) {
             birt = true;
@@ -346,20 +348,33 @@ public class GedcomParser {
             deat = false;
             SimpleDateFormat f = new SimpleDateFormat("dd MMM yyyy");
             Date deatDay = f.parse(value);
-            Indiobj.setDeathDay(deatDay);
-            Date birthday = Indiobj.getBday();
+            String IndiId=Indiobj.getId();
+            Indi indi=Individual.get(IndiId);
+            Date birthday=indi.getBday();
+            
+            if(deatDay.before(birthday))
+            {
+            	System.out.println("Error: Death before Birth");
+            }
             long diffM = Math.abs(birthday.getTime() - deatDay.getTime());
             long diff = TimeUnit.DAYS.convert(diffM, TimeUnit.MILLISECONDS);
             int years = (int) diff / 365;
+            
+           
             Indiobj.setAge("" + years + "");
-        }
+            Indiobj.setDeathDay(deatDay);
+
+            
+            }
+            
+        
 
         if (tag.equals("DEAT")) {
             deat = true;
             Indiobj.setDeath();
         }
 
-        if (tag.equals("FAMC")) {
+        if (tag.equals("FAMC")) {    
             Indiobj.setChild(value);
         }
 
@@ -390,8 +405,25 @@ public class GedcomParser {
             married = false;
             SimpleDateFormat f = new SimpleDateFormat("dd MMM yyyy");
             Date marrDt = f.parse(value);
+            String Hid=Famobj.gethID();
+            Indi husbId=Individual.get(Hid);
+            String Wid=Famobj.getwID();
+            Indi wifeId=Individual.get(Wid);
+            int count=0;
+            if(marrDt.before(husbId.getBday()))
+            {
+            	System.out.println("Error! Husband was born before Marriage");
+            	count++;	
+            }
+            if(marrDt.before(wifeId.getBday()))
+            {
+            	System.out.println("Error! Wife was born before Marriage");
+            	count++;
+            }
             Famobj.setMarried(marrDt);
+            
         }
+        
 
         if (tag.equals("MARR")) {
             married = true;
@@ -399,17 +431,21 @@ public class GedcomParser {
 
         if (divorced) {
             divorced = false;
+            String Fid=Famobj.getFid();
+            Fami fam=Family.get(Fid);
+            
             SimpleDateFormat f = new SimpleDateFormat("dd MMM yyyy");
             Date divDt = f.parse(value);
+            
             Famobj.setDivorced(divDt);
-        }
+            }
+        
 
         if (tag.equals("DIV")) {
             divorced = true;
         }
 
     }
-
 
     public void showIndiTable() {
 
@@ -447,7 +483,6 @@ public class GedcomParser {
         System.out.println();
 
     }
-
     public void showFamiTable() {
 
         String align = "| %-7s | %-10s | %-10s | %-10s | %-21s | %-7s | %-21s | %-21s |%n";
@@ -484,7 +519,7 @@ public class GedcomParser {
         GedcomParser lr = new GedcomParser();
         try {
             //  BufferedReader br = new BufferedReader(new FileReader("proj02test.ged"));
-            BufferedReader br = new BufferedReader(new FileReader("Project01_Harishkumar_M.ged"));
+            BufferedReader br = new BufferedReader(new FileReader("C:\\Users\\12012\\Desktop\\CS 555\\My-Family-10-Feb-2020-670.ged"));
             String line = null;
             while ((line = br.readLine()) != null) {
                 lr.process(line);
