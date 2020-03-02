@@ -352,9 +352,9 @@ public class GedcomParser {
             Indi indi=Individual.get(IndiId);
             Date birthday=indi.getBday();
             
-            if(deatDay.before(birthday))
+            if(this.US03(deatDay, birthday))
             {
-            	System.out.println("Error: Death before Birth");
+            	System.out.println("ERROR: INDIVIDUAL: US03 "+indi.getId()+" Deathday "+deatDay+" before Birthday "+birthday);
             }
             long diffM = Math.abs(birthday.getTime() - deatDay.getTime());
             long diff = TimeUnit.DAYS.convert(diffM, TimeUnit.MILLISECONDS);
@@ -412,16 +412,15 @@ public class GedcomParser {
             int count=0;
             if(marrDt.before(husbId.getBday()))
             {
-            	System.out.println("Error! Husband was born before Marriage");
+            	System.out.println("Error: FAMILY: US02 "+Famobj.getFid()+" Husband's birth date "+husbId.getBday()+" after Marriage date "+marrDt);
             	count++;	
             }
             if(marrDt.before(wifeId.getBday()))
             {
-            	System.out.println("Error! Wife was born before Marriage");
+            	System.out.println("Error: FAMILY: US02 "+Famobj.getFid()+" Husband's birth date "+wifeId.getBday()+" after Marriage date "+marrDt);
             	count++;
             }
             Famobj.setMarried(marrDt);
-            
         }
         
 
@@ -445,6 +444,22 @@ public class GedcomParser {
             divorced = true;
         }
 
+    }
+    public static boolean US03(Date death, Date birth)
+    {
+    	if(death.before(birth))
+    	{
+    		return true;
+    	}
+    	return false;
+    }
+    public static boolean US02(Date bday, Date marrday)
+    {
+    	if(marrday.before(bday))
+    	{
+    		return true;
+    	}
+    	return false;
     }
 
     public void showIndiTable() {
