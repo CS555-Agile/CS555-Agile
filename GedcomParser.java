@@ -4,11 +4,15 @@ import java.util.*;
 import java.io.*;
 import java.util.concurrent.TimeUnit;
 
+import javax.xml.transform.ErrorListener;
+
+
+
 public class GedcomParser {
 
     HashMap<String, String> GedMap = new HashMap<>();
     //HashMap<String, Indi> Individual = new HashMap<>();
-    TreeMap<String, Indi> Individual = new TreeMap<>(new Comparator<String>() {
+    static TreeMap<String, Indi> Individual = new TreeMap<>(new Comparator<String>() {
         @Override
         public int compare(String o1, String o2) {
             int a1 = Integer.valueOf(o1.substring(2, o1.length() - 1));
@@ -17,7 +21,7 @@ public class GedcomParser {
         }
     });
     // HashMap<String, Fami> Family = new HashMap<>();
-    TreeMap<String, Fami> Family = new TreeMap<>(new Comparator<String>() {
+    static TreeMap<String, Fami> Family = new TreeMap<>(new Comparator<String>() {
         @Override
         public int compare(String o1, String o2) {
             int a1 = Integer.valueOf(o1.substring(2, o1.length() - 1));
@@ -32,6 +36,7 @@ public class GedcomParser {
     Date birthday;
     Indi Indiobj = null;
     Fami Famobj = null;
+    static ArrayList<String> errorList=new ArrayList<String>();
 
     private static class Indi {
 
@@ -316,7 +321,7 @@ public class GedcomParser {
     }
 
     public void createID(String value, String tag) throws ParseException {
-
+    	Date current=new Date();
         if (tag.equals("NAME")) {
             Indiobj.setName(value);
         }
@@ -325,18 +330,28 @@ public class GedcomParser {
             Indiobj.setGender(value);
         }
 
-        if (birt) {
+        if (birt) {//igonre this for now shubham, not working now, will try solving tommorw
             birt = false;
             SimpleDateFormat f = new SimpleDateFormat("dd MMM yyyy");
             Date bday = f.parse(value);
+            if(current.before(bday))
+            {
+            	System.out.println("Error!- Birth Day is from future");
+            }
             birthday = bday;
             Indiobj.setBday(bday);
             Date c = new Date();
             long diffM = Math.abs(c.getTime() - bday.getTime());
             long diff = TimeUnit.DAYS.convert(diffM, TimeUnit.MILLISECONDS);
             int years = (int) diff / 365;
+            if(years>150)
+            {
+            	System.out.println("Error! Cannot be older than 150");
+            }
             Indiobj.setAge("" + years + "");
+            
         }
+        
 
         if (tag.equals("BIRT")) {
             birt = true;
@@ -346,20 +361,32 @@ public class GedcomParser {
             deat = false;
             SimpleDateFormat f = new SimpleDateFormat("dd MMM yyyy");
             Date deatDay = f.parse(value);
-            Indiobj.setDeathDay(deatDay);
-            Date birthday = Indiobj.getBday();
+            String IndiId=Indiobj.getId();
+            Indi indi=Individual.get(IndiId);
+            Date birthday=indi.getBday();
+            if(current.before(deatDay))
+            {
+            	System.out.println("Error!- Death Day is from future");
+            }
             long diffM = Math.abs(birthday.getTime() - deatDay.getTime());
             long diff = TimeUnit.DAYS.convert(diffM, TimeUnit.MILLISECONDS);
             int years = (int) diff / 365;
+            if(years>150)
+            {
+            	System.out.println("Error! Cannot be older than 150");//Shubham2
+            }
             Indiobj.setAge("" + years + "");
-        }
+            Indiobj.setDeathDay(deatDay);   
+            }
+            
+        
 
         if (tag.equals("DEAT")) {
             deat = true;
             Indiobj.setDeath();
         }
 
-        if (tag.equals("FAMC")) {
+        if (tag.equals("FAMC")) {    
             Indiobj.setChild(value);
         }
 
@@ -383,6 +410,28 @@ public class GedcomParser {
         }
 
         if (tag.equals("CHIL")) {
+        	
+        	Indi child = Individual.get(value);
+        	Date childDOB=child.getBday();
+        	String FamId=child.getChild();
+//        	Fami fam=Family.get(FamId);
+//        	if(childDOB.before(fam.getMarried()))
+//        	{
+//        		System.out.println("Error!-Child born before Parents Marriage");
+//        	}
+//        	if(Famobj.getDivorced()!=null)
+//        	{
+//        		long diffM = Math.abs(child.getBday().getTime() - Famobj.getDivorced().getTime());
+//                long diff = TimeUnit.DAYS.convert(diffM, TimeUnit.MILLISECONDS);
+//                int months = (int) (diff / 365)*12;
+//                if(months<9)
+//                {
+//                	System.out.println("Error!-Child was born after 9 months of their parents Divorce ");
+//                }
+//        	}
+        	
+        	
+        	
             Famobj.setcSet(value);
         }
 
@@ -390,8 +439,31 @@ public class GedcomParser {
             married = false;
             SimpleDateFormat f = new SimpleDateFormat("dd MMM yyyy");
             Date marrDt = f.parse(value);
+            String Hid=Famobj.gethID();
+            Indi husbId=Individual.get(Hid);
+            String Wid=Famobj.getwID();
+            Indi wifeId=Individual.get(Wid);
+            int count=0;
+            if(current.before(marrDt))
+            {
+            	System.out.println("Error!- Marriage Day is from future");
+            }
+            
+            ArrayList<String> childList=Famobj.getcSet();
+            for(String id:childList)
+            {
+            	Indi indi=Individual.get(id);
+            	Date bday=indi.getBday();
+            	if(bday.before(marrDt))
+            	{
+            		System.out.println("Error!-Child Born Before Marriage");
+            	}
+            }
+            
             Famobj.setMarried(marrDt);
+            
         }
+        
 
         if (tag.equals("MARR")) {
             married = true;
@@ -399,17 +471,90 @@ public class GedcomParser {
 
         if (divorced) {
             divorced = false;
+            String Fid=Famobj.getFid();
+            Fami fam=Family.get(Fid);
+            
             SimpleDateFormat f = new SimpleDateFormat("dd MMM yyyy");
             Date divDt = f.parse(value);
+            if(current.before(divDt))
+            {
+            	System.out.println("Error!- Divorce day is from future");
+            }
+            if(divDt.before(fam.getMarried()))
+            {
+            	System.out.println("Error!-Divorce before Marriage");
+            }
+            ArrayList<String> childList=Famobj.getcSet();
+            for(String id:childList)
+            {
+            	Indi indi=Individual.get(id);
+            	Date bday=indi.getBday();
+            	long diffM = (bday.getTime() - divDt.getTime());
+            	long diff = TimeUnit.DAYS.convert(diffM, TimeUnit.MILLISECONDS);
+            	int months = (int) (diff / 365)*12;
+            	if(months>9)
+            	{
+            		System.out.println("Error!-Child  was born after 9 months of their parents Divorce "+indi.getName());
+            	}
+            	
+            	
+            }
+            
             Famobj.setDivorced(divDt);
-        }
+            }
+        
 
         if (tag.equals("DIV")) {
             divorced = true;
         }
 
     }
-
+    public static boolean US08()
+    {
+    	boolean flag=true;
+    	for (Map.Entry mapElement1 : Family.entrySet()) {
+        	Fami fam=(Fami) mapElement1.getValue();
+        	Date marrDate=fam.getMarried();
+        	Date divDate=fam.getDivorced();
+        	ArrayList<String> child=fam.getcSet();
+        	for(String s:child)
+        	{
+        		Indi ind=Individual.get(s);
+        		if(ind.getBday().before(marrDate))
+        		{
+        			errorList.add("ERROR: INDIVIDUAL: US08" +ind.getId()+"is born before parents Marriage "+marrDate);
+        			flag=false;
+        		}
+        		if(divDate!=null)
+        		{
+        		long diffM = (ind.getBday().getTime() - divDate.getTime());
+            	long diff = TimeUnit.DAYS.convert(diffM, TimeUnit.MILLISECONDS);
+            	int months = (int) (diff / 365)*12;
+            	if(months>9)
+            	{
+            		errorList.add("ERROR!- FAMILY  US08 CHILD "+ind.getId()+"was born after 9 months of their parents Divorce "+fam.getDivorced());
+            		flag=false;
+            	}
+        		}
+        		
+        	}
+        	
+    	}
+    	return flag;
+    }
+    public static boolean US07()
+    {
+    	boolean flag=true;
+    	for (Map.Entry mapElement : Individual.entrySet()) {
+        	Indi indi=(Indi) mapElement.getValue();	
+        	int age=Integer.parseInt(indi.getAge());
+        	if(Integer.parseInt(indi.getAge())>150)
+        	{
+        		errorList.add("ERROR: INDIVIDUAL: US07: "+indi.getId()+"is older than 150 years old "+age);
+        	}
+    	}
+    	return flag;
+    }
 
     public void showIndiTable() {
 
@@ -447,7 +592,6 @@ public class GedcomParser {
         System.out.println();
 
     }
-
     public void showFamiTable() {
 
         String align = "| %-7s | %-10s | %-10s | %-10s | %-21s | %-7s | %-21s | %-21s |%n";
@@ -484,7 +628,7 @@ public class GedcomParser {
         GedcomParser lr = new GedcomParser();
         try {
             //  BufferedReader br = new BufferedReader(new FileReader("proj02test.ged"));
-            BufferedReader br = new BufferedReader(new FileReader("Project01_Harishkumar_M.ged"));
+            BufferedReader br = new BufferedReader(new FileReader("C:\\Users\\12012\\Desktop\\CS 555\\Project01_Harishkumar_M2.ged"));
             String line = null;
             while ((line = br.readLine()) != null) {
                 lr.process(line);
@@ -492,6 +636,12 @@ public class GedcomParser {
 
             lr.showIndiTable();
             lr.showFamiTable();
+            lr.US07();
+            lr.US08();
+            for(String str:errorList)
+            {
+            	System.out.println(str);
+            }
         } catch (FileNotFoundException e) {
             System.out.println("File not Found" + e);
         } catch (IOException e) {
