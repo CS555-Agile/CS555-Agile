@@ -1,3 +1,4 @@
+package Gedcom;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -6,9 +7,9 @@ import java.util.concurrent.TimeUnit;
 
 public class GedcomParser {
 
-    HashMap<String, String> GedMap = new HashMap<>();
-    //HashMap<String, Indi> Individual = new HashMap<>();
-    TreeMap<String, Indi> Individual = new TreeMap<>(new Comparator<String>() {
+    static HashMap<String, String> GedMap = new HashMap<>();
+     //HashMap<String, Indi> Individual = new HashMap<>();
+    static TreeMap<String, Indi> Individual = new TreeMap<>(new Comparator<String>() {
         @Override
         public int compare(String o1, String o2) {
             int a1 = Integer.valueOf(o1.substring(2, o1.length() - 1));
@@ -17,7 +18,7 @@ public class GedcomParser {
         }
     });
     // HashMap<String, Fami> Family = new HashMap<>();
-    TreeMap<String, Fami> Family = new TreeMap<>(new Comparator<String>() {
+    static TreeMap<String, Fami> Family = new TreeMap<>(new Comparator<String>() {
         @Override
         public int compare(String o1, String o2) {
             int a1 = Integer.valueOf(o1.substring(2, o1.length() - 1));
@@ -32,6 +33,7 @@ public class GedcomParser {
     Date birthday;
     Indi Indiobj = null;
     Fami Famobj = null;
+    static ArrayList<String> errorList=new ArrayList<String>();
 
     private static class Indi {
 
@@ -352,10 +354,10 @@ public class GedcomParser {
             Indi indi=Individual.get(IndiId);
             Date birthday=indi.getBday();
             
-            if(this.US03(deatDay, birthday))
+            /*if(this.US03(deatDay, birthday))
             {
             	System.out.println("ERROR: INDIVIDUAL: US03 "+indi.getId()+" Deathday "+deatDay+" before Birthday "+birthday);
-            }
+            }*/
             long diffM = Math.abs(birthday.getTime() - deatDay.getTime());
             long diff = TimeUnit.DAYS.convert(diffM, TimeUnit.MILLISECONDS);
             int years = (int) diff / 365;
@@ -410,16 +412,7 @@ public class GedcomParser {
             String Wid=Famobj.getwID();
             Indi wifeId=Individual.get(Wid);
             int count=0;
-            if(marrDt.before(husbId.getBday()))
-            {
-            	System.out.println("Error: FAMILY: US02 "+Famobj.getFid()+" Husband's birth date "+husbId.getBday()+" after Marriage date "+marrDt);
-            	count++;	
-            }
-            if(marrDt.before(wifeId.getBday()))
-            {
-            	System.out.println("Error: FAMILY: US02 "+Famobj.getFid()+" Husband's birth date "+wifeId.getBday()+" after Marriage date "+marrDt);
-            	count++;
-            }
+            
             Famobj.setMarried(marrDt);
         }
         
@@ -445,21 +438,48 @@ public class GedcomParser {
         }
 
     }
-    public static boolean US03(Date death, Date birth)
+    public static boolean US03()
     {
-    	if(death.before(birth))
-    	{
-    		return true;
-    	}
-    	return false;
+    	boolean flag=true;
+    	for (Map.Entry mapElement : Individual.entrySet()) {
+    	Indi indi=(Indi) mapElement.getValue();	
+    	String IndiId=indi.getId();
+        Date birthday=indi.getBday();
+        Date deathday=indi.getDeath();
+        if(deathday != null && deathday.before(birthday))
+        {
+        	errorList.add("ERROR: INDIVIDUAL: US03 "+indi.getId()+" Deathday "+deathday+" before Birthday "+birthday);
+            flag=false;
+
+        }
+        
     }
-    public static boolean US02(Date bday, Date marrday)
+    	return flag;
+
+    }
+    
+    public static boolean US02()
     {
-    	if(marrday.before(bday))
-    	{
-    		return true;
-    	}
-    	return false;
+    	boolean flag=false;
+    	for (Map.Entry mapElement : Family.entrySet()) {
+    	Fami fam=(Fami) mapElement.getValue();
+    	String Hid=fam.gethID();
+        Indi husbId=Individual.get(Hid);
+        String Wid=fam.getwID();
+        Indi wifeId=Individual.get(Wid);
+        if(fam.getMarried().before(husbId.getBday()))
+        {
+        	errorList.add("ERROR: FAMILY: US02 "+fam.getFid()+" Husband's birth date "+husbId.getBday()+" after Marriage date "+fam.getMarried());
+        		
+        }
+        if(fam.getMarried().before(wifeId.getBday()))
+        {
+        	errorList.add("ERROR: FAMILY: US02 "+fam.getFid()+" Husband's birth date "+wifeId.getBday()+" after Marriage date "+fam.getMarried());
+        	
+        }
+	        
+    }
+    	return flag;
     }
 
     public void showIndiTable() {
@@ -528,13 +548,13 @@ public class GedcomParser {
         }
         System.out.format("+---------+------------+------------+------------+-----------------------+---------+-----------------------+-----------------------+%n");
     }
-
+   
     public static void main(String[] args) {
 
         GedcomParser lr = new GedcomParser();
         try {
             //  BufferedReader br = new BufferedReader(new FileReader("proj02test.ged"));
-            BufferedReader br = new BufferedReader(new FileReader("C:\\Users\\12012\\Desktop\\CS 555\\My-Family-10-Feb-2020-670.ged"));
+            BufferedReader br = new BufferedReader(new FileReader("C:\\Users\\12012\\Desktop\\CS 555\\Project01_Harishkumar_M2.ged"));
             String line = null;
             while ((line = br.readLine()) != null) {
                 lr.process(line);
@@ -542,6 +562,12 @@ public class GedcomParser {
 
             lr.showIndiTable();
             lr.showFamiTable();
+            lr.US02();
+            lr.US03();
+            for(String str:errorList)
+            {
+            	System.out.println(str);
+            }
         } catch (FileNotFoundException e) {
             System.out.println("File not Found" + e);
         } catch (IOException e) {
