@@ -499,10 +499,8 @@ public class GedcomParser {
             lr.showIndiTable();
             lr.showFamiTable();
 
-
             lr.US05();
             lr.US06();
-
 
             lr.US07();
             lr.US08();
@@ -513,10 +511,8 @@ public class GedcomParser {
             lr.US02();
             lr.US03();
 
-
             lr.US10();
             lr.US17();
-
 
             for (String str : Errorlist) {
                 System.out.println(str);
@@ -744,7 +740,6 @@ public class GedcomParser {
 
         return flag;
     }
-
     public static boolean US10()
     {
         boolean flag=true;
@@ -803,5 +798,4 @@ public class GedcomParser {
 
         return flag;
     }
-
 }
