@@ -33,14 +33,17 @@ public class GedcomParserTest {
 
     void test_us03(){
 //        try {
-        assertEquals(true, GedcomParser.US01(), "User story 01 failed!");
+
+        assertEquals(true, GedcomParser.US03(), "User story 01 failed!");
+
 //        } catch (ParseException e) {
 //            e.printStackTrace();
 //        }
     }
     void test_us02(){
 //      try {
-        assertEquals(true, GedcomParser.US04(), "User story 04 failed!");
+
+        assertEquals(true, GedcomParser.US02(), "User story 04 failed!");
 //      } catch (ParseException e) {
 //          e.printStackTrace();
 //      }
@@ -75,6 +78,7 @@ public class GedcomParserTest {
 //          e.printStackTrace();
 //      }
     }
+
     void test_us10(){
 //      try {
         assertEquals(true, GedcomParser.US10(), "User story 10 failed!");
@@ -89,4 +93,5 @@ public class GedcomParserTest {
 //          e.printStackTrace();
 //      }
     }
+
 }
