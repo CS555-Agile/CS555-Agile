@@ -489,7 +489,7 @@ public class GedcomParser {
         GedcomParser lr = new GedcomParser();
         try {
             //  M2 ending is erroneous data and M ending is proper data
-           // BufferedReader br = new BufferedReader(new FileReader("Project01_Harishkumar_M.ged"));
+            //BufferedReader br = new BufferedReader(new FileReader("Project01_Harishkumar_M.ged"));
            BufferedReader br = new BufferedReader(new FileReader("Project01_Harishkumar_M2.ged"));
             String line = null;
             while ((line = br.readLine()) != null) {
@@ -499,8 +499,8 @@ public class GedcomParser {
             lr.showIndiTable();
             lr.showFamiTable();
 
-            lr.us05();
-            lr.us06();
+            lr.US05();
+            lr.US06();
 
             lr.US07();
             lr.US08();
@@ -510,6 +510,9 @@ public class GedcomParser {
 
             lr.US02();
             lr.US03();
+
+            lr.US10();
+            lr.US17();
 
             for (String str : Errorlist) {
                 System.out.println(str);
@@ -522,7 +525,7 @@ public class GedcomParser {
 
     }
 
-    public static boolean us05() {
+    public static boolean US05() {
 
         boolean flag = true;
         for (Map.Entry mapElement : Family.entrySet()) {
@@ -554,7 +557,7 @@ public class GedcomParser {
         return flag;
     }
 
-    public static boolean us06() {
+    public static boolean US06() {
 
         boolean flag = true;
         for (Map.Entry mapElement : Family.entrySet()) {
@@ -729,6 +732,64 @@ public class GedcomParser {
             if(divDate!=null && divDate.before(marrDate))
             {
                 Errorlist.add("ERROR: FAMILY- US04 "+fam.getFid()+"Divorce "+divDate+" happened before Marriage "+marrDate);
+                flag=false;
+
+            }
+
+        }
+
+        return flag;
+    }
+    public static boolean US10()
+    {
+        boolean flag=true;
+        for (Map.Entry mapElement1 : Family.entrySet()) {
+            Fami fam=(Fami) mapElement1.getValue();
+            Date marrDate=fam.getMarried();
+            String hID = fam.gethID();
+            Indi husIndi = (Indi) Individual.get(hID);
+            Date husBday = husIndi.getBday();
+            String wID = fam.getwID();
+            Indi wifeIndi = (Indi) Individual.get(wID);
+            Date wifeBday = wifeIndi.getBday();
+
+            long diffM = Math.abs(marrDate.getTime() - husBday.getTime());
+            long diff = TimeUnit.DAYS.convert(diffM, TimeUnit.MILLISECONDS);
+            int husDiff = (int) diff / 365;
+
+            long diffMw = Math.abs(marrDate.getTime() - wifeBday.getTime());
+            long diffw = TimeUnit.DAYS.convert(diffMw, TimeUnit.MILLISECONDS);
+            int wifeDiff = (int) diffw / 365;
+
+            Date divDate=fam.getDivorced();
+            if(husDiff < 14 || wifeDiff < 14 )
+            {
+                Errorlist.add("ERROR: FAMILY- US10 "+fam.getFid()+" husband or/and wife age less than 14 on marriage day Husband ID "+hID+" and Wife ID "+wID);
+                flag=false;
+
+            }
+
+        }
+
+        return flag;
+    }
+    public static boolean US17()
+    {
+        boolean flag=true;
+        for (Map.Entry mapElement1 : Family.entrySet()) {
+            Fami fam=(Fami) mapElement1.getValue();
+            String hID = fam.gethID();
+            Indi husIndi = (Indi) Individual.get(hID);
+            String husChldOf = husIndi.getChild();
+            ArrayList<String> husSpouseOf = husIndi.getSpouse();
+            String wID = fam.getwID();
+            Indi wifeIndi = (Indi) Individual.get(wID);
+            String wifeChldOf = wifeIndi.getChild();
+            ArrayList<String> wifeSpouseOf = wifeIndi.getSpouse();
+
+            if(husSpouseOf.contains(wifeChldOf) || wifeSpouseOf.contains(husChldOf))
+            {
+                Errorlist.add("ERROR: FAMILY- US17 "+fam.getFid()+" One of the partner in this family is a child of another ");
                 flag=false;
 
             }
