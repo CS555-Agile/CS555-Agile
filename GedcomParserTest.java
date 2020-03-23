@@ -15,16 +15,16 @@ public class GedcomParserTest {
     }
 
     @Test
-    void test_us03(){
+    void test_us12(){
 //        try {
-            assertEquals(true, GedcomParser.US03(), "User story 03 failed!");
+            assertEquals(true, GedcomParser.US12(), "User story 12 failed!");
 //        } catch (ParseException e) {
 //            e.printStackTrace();
 //        }
     }
-    void test_us02(){
+    void test_us18(){
 //      try {
-          assertEquals(true, GedcomParser.US02(), "User story 02 failed!");
+          assertEquals(true, GedcomParser.US18(), "User story 18 failed!");
 //      } catch (ParseException e) {
 //          e.printStackTrace();
 //      }
