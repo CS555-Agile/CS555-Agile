@@ -797,4 +797,123 @@ public class GedcomParser {
     }
     	return flag;
     }
+    public static boolean US09()
+    {
+    	boolean flag=true;
+    	for(Map.Entry mapElement1 : Family.entrySet())
+    	{
+    		Fami fam=(Fami) mapElement1.getValue();
+    		ArrayList<String> childs=fam.getcSet();
+    		String husb=fam.gethID();
+    		String wife=fam.getwID();
+    		Indi father=Individual.get(husb);
+    		Indi mother=Individual.get(wife);
+    		Date fatherDday=father.getDeath();
+    		Date motherDday=mother.getDeath();
+    		for(String s: childs)
+    		{
+    			Indi ind=Individual.get(s);
+    			if(motherDday.before(ind.getBday()))
+    			{
+                    Errorlist.add("ERROR: FAMILY: US09: "+ind.getId()+"BirthDay "+ind.getBday()+" is after Mothers death "+motherDday);
+                    flag=false;
+    			}
+    			if(Period.between(Instant.ofEpochMilli(fatherDday.getTime()).atZone(ZoneId.systemDefault()).toLocalDate(),Instant.ofEpochMilli(ind.getBday().getTime()).atZone(ZoneId.systemDefault()).toLocalDate()).getMonths()>9)
+    			{
+                    Errorlist.add("ERROR: FAMILY: US09 "+ind.getId()+"BirthDay "+ind.getBday()+" is after 9 months of Fathers death "+fatherDday);
+                    flag=false;
+    			}
+    			
+    			
+    		}
+    		
+    		
+    	}
+    	return flag;
+    	
+    }
+    public static boolean US13()
+    {
+    	boolean flag=true;
+    	for(Map.Entry mapElement1 : Family.entrySet())
+    	{
+    		Fami fam=(Fami) mapElement1.getValue();
+    		ArrayList<String> childs=fam.getcSet();
+    		if(childs.size()>1)
+    		{
+    			for(int i=0;i<childs.size();i++)
+    			{
+    				for(int j=0;j<childs.size();j++)		
+    				{
+    	    			if(Period.between(Instant.ofEpochMilli(Individual.get(childs.get(i)).getBday().getTime()).atZone(ZoneId.systemDefault()).toLocalDate(),Instant.ofEpochMilli(Individual.get(childs.get(j)).getBday().getTime()).atZone(ZoneId.systemDefault()).toLocalDate()).getMonths()<8)
+    	    			{
+    	                    Errorlist.add("ERROR: FAMILY: US13: Siblings "+Individual.get(childs.get(j)+" & "+Individual.get(childs.get(j+1)+" are born within 8 months")));
+    	                    flag=false;
+    	    			}
+    	    			if(Period.between(Instant.ofEpochMilli(Individual.get(childs.get(i)).getBday().getTime()).atZone(ZoneId.systemDefault()).toLocalDate(),Instant.ofEpochMilli(Individual.get(childs.get(j)).getBday().getTime()).atZone(ZoneId.systemDefault()).toLocalDate()).getDays()>2)
+    	    			{
+    	                    Errorlist.add("ERROR: FAMILY: US13: Siblings "+Individual.get(childs.get(j)+" & "+Individual.get(childs.get(j+1)+" are born after 2 days")));
+    	                    flag=false;
+    	    			}
+
+    				}
+    			}
+    		}
+    	}
+    return flag;
+    }
+    public static boolean US14()
+    {
+    	boolean flag=true;
+    	int count=0;
+    	for(Map.Entry mapElement1 : Family.entrySet())
+    	{
+    		Fami fam=(Fami) mapElement1.getValue();
+    		ArrayList<String> childs=fam.getcSet();
+    		if(childs.size()>5)
+    		{
+    			for(int i=0;i<childs.size();i++)
+    			{
+    				for(int j=0;j<childs.size();j++)		
+    				{
+    					if(Individual.get(childs.get(i)).getBday().equals(Individual.get(childs.get(j))))
+    	    			{
+    						count++;
+    	    			}
+    				}
+    
+    			}
+    		}
+    		if(count>5)
+    		{
+                Errorlist.add("ERROR: FAMILY: US14 More than 5 siblings are born together");
+                flag=false;
+
+    		}
+    	}
+    	return flag;
+    }
+    public static boolean US16()
+    {
+    	boolean flag=true;
+    	for(Map.Entry mapElement1 : Family.entrySet())
+    	{
+    		Fami fam=(Fami) mapElement1.getValue();
+    		ArrayList<String> childs=fam.getcSet();
+    		String husbName=fam.gethName();
+    		String surName=husbName.substring(husbName.lastIndexOf(" ")+1);
+    		for(String s:childs)
+    		{
+    			if(Individual.get(s).getGender().equals("M") && !Individual.get(s).getName().substring(Individual.get(s).getName().lastIndexOf(" ")+1).equals(surName))
+    			{
+                    Errorlist.add("ERROR: FAMILY: US16 Child "+Individual.get(s).getId()+" has a different last name than the family name "+surName);
+                    flag=false;
+    			}
+    		}
+    	
+    	}
+    	return false;
+    
+    
+}
 }
