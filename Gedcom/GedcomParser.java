@@ -6,6 +6,8 @@ import java.util.*;
 import java.io.*;
 import java.util.concurrent.TimeUnit;
 
+import javax.xml.transform.ErrorListener;
+
 public class GedcomParser {
 
     private static HashMap<String, String> GedMap = new HashMap<>();
@@ -487,7 +489,7 @@ public class GedcomParser {
         GedcomParser lr = new GedcomParser();
         try {
             //  M2 ending is erroneous data and M ending is proper data
-           // BufferedReader br = new BufferedReader(new FileReader("Project01_Harishkumar_M.ged"));
+            //BufferedReader br = new BufferedReader(new FileReader("Project01_Harishkumar_M.ged"));
            BufferedReader br = new BufferedReader(new FileReader("Project01_Harishkumar_M2.ged"));
             String line = null;
             while ((line = br.readLine()) != null) {
@@ -497,8 +499,21 @@ public class GedcomParser {
             lr.showIndiTable();
             lr.showFamiTable();
 
-            lr.us05();
-            lr.us06();
+            lr.US05();
+            lr.US06();
+
+            lr.US07();
+            lr.US08();
+
+            lr.US01();
+            lr.US04();
+
+            lr.US02();
+            lr.US03();
+
+            lr.US10();
+            lr.US17();
+
             for (String str : Errorlist) {
                 System.out.println(str);
             }
@@ -510,7 +525,7 @@ public class GedcomParser {
 
     }
 
-    public static boolean us05() {
+    public static boolean US05() {
 
         boolean flag = true;
         for (Map.Entry mapElement : Family.entrySet()) {
@@ -542,7 +557,7 @@ public class GedcomParser {
         return flag;
     }
 
-    public static boolean us06() {
+    public static boolean US06() {
 
         boolean flag = true;
         for (Map.Entry mapElement : Family.entrySet()) {
@@ -571,6 +586,216 @@ public class GedcomParser {
                 flag = false;
             }
         }
+        return flag;
+    }
+
+    public static boolean US08()
+    {
+        boolean flag=true;
+        for (Map.Entry mapElement1 : Family.entrySet()) {
+            Fami fam=(Fami) mapElement1.getValue();
+            Date marrDate=fam.getMarried();
+            Date divDate=fam.getDivorced();
+            ArrayList<String> child=fam.getcSet();
+            for(String s:child)
+            {
+                Indi ind=Individual.get(s);
+                if(ind.getBday().before(marrDate))
+                {
+                    Errorlist.add("ERROR: INDIVIDUAL: US08" +ind.getId()+"is born before parents Marriage "+marrDate);
+                    flag=false;
+                }
+                if(divDate!=null)
+                {
+                    long diffM = (ind.getBday().getTime() - divDate.getTime());
+                    long diff = TimeUnit.DAYS.convert(diffM, TimeUnit.MILLISECONDS);
+                    int months = (int) (diff / 365)*12;
+                    if(months>9)
+                    {
+                        Errorlist.add("ERROR!- FAMILY  US08 CHILD "+ind.getId()+"was born after 9 months of their parents Divorce "+fam.getDivorced());
+                        flag=false;
+                    }
+                }
+
+            }
+
+        }
+        return flag;
+    }
+    public static boolean US07()
+    {
+        boolean flag=true;
+        for (Map.Entry mapElement : Individual.entrySet()) {
+            Indi indi=(Indi) mapElement.getValue();
+            int age=Integer.parseInt(indi.getAge());
+            if(Integer.parseInt(indi.getAge())>150)
+            {
+                Errorlist.add("ERROR: INDIVIDUAL: US07: "+indi.getId()+"is older than 150 years old "+age);
+                flag = false;
+            }
+        }
+        return flag;
+    }
+
+    public static boolean US03()
+    {
+        boolean flag=true;
+        for (Map.Entry mapElement : Individual.entrySet()) {
+            Indi indi=(Indi) mapElement.getValue();
+            String IndiId=indi.getId();
+            Date birthday=indi.getBday();
+            Date deathday=indi.getDeath();
+            if(deathday != null && deathday.before(birthday))
+            {
+                Errorlist.add("ERROR: INDIVIDUAL: US03 "+indi.getId()+" Deathday "+deathday+" before Birthday "+birthday);
+                flag=false;
+
+            }
+
+        }
+        return flag;
+
+    }
+
+    public static boolean US02()
+    {
+        boolean flag=true;
+        for (Map.Entry mapElement : Family.entrySet()) {
+            Fami fam=(Fami) mapElement.getValue();
+            String Hid=fam.gethID();
+            Indi husbId=Individual.get(Hid);
+            String Wid=fam.getwID();
+            Indi wifeId=Individual.get(Wid);
+            if(fam.getMarried().before(husbId.getBday()))
+            {
+                Errorlist.add("ERROR: FAMILY: US02 "+fam.getFid()+" Husband's birth date "+husbId.getBday()+" after Marriage date "+fam.getMarried());
+                flag = false;
+            }
+            if(fam.getMarried().before(wifeId.getBday()))
+            {
+                Errorlist.add("ERROR: FAMILY: US02 "+fam.getFid()+" Husband's birth date "+wifeId.getBday()+" after Marriage date "+fam.getMarried());
+                flag = false;
+            }
+
+        }
+        return flag;
+    }
+
+    public static boolean US01()
+    {
+        boolean flag=true;
+        Date current=new Date();
+        for (Map.Entry mapElement : Individual.entrySet()) {
+            Indi indi=(Indi) mapElement.getValue();
+            String IndiId=indi.getId();
+            Date birthday=indi.getBday();
+            Date deathday=indi.getDeath();
+            if(current.before(birthday))
+            {
+                Errorlist.add("ERROR: INDIVIDUAL: US01: "+indi.getId()+"BirthDay "+birthday+" is from future");
+                flag=false;
+            }
+            if(deathday!=null && current.before(deathday))
+            {
+                Errorlist.add("ERROR: INDIVIDUAL- US01: "+indi.getId()+" DeathDay "+deathday+" is from future");
+                flag=false;
+            }
+        }
+        for (Map.Entry mapElement1 : Family.entrySet()) {
+            Fami fam=(Fami) mapElement1.getValue();
+            Date marrDate=fam.getMarried();
+            Date divDate=fam.getDivorced();
+            if(current.before(marrDate))
+            {
+                Errorlist.add("ERROR: FAMILY- US01: "+fam.getFid()+" MArriageDay "+marrDate+" is from future");
+                flag=false;
+
+            }
+            if(divDate!=null && current.before(divDate))
+            {
+                Errorlist.add("ERROR: FAMILY- US01: "+fam.getFid()+" DivorceDay "+divDate+" is from future");
+                flag = false;
+            }
+
+
+
+        }
+        return flag;
+    }
+    public static boolean US04()
+    {
+        boolean flag=true;
+        for (Map.Entry mapElement1 : Family.entrySet()) {
+            Fami fam=(Fami) mapElement1.getValue();
+            Date marrDate=fam.getMarried();
+            Date divDate=fam.getDivorced();
+            if(divDate!=null && divDate.before(marrDate))
+            {
+                Errorlist.add("ERROR: FAMILY- US04 "+fam.getFid()+"Divorce "+divDate+" happened before Marriage "+marrDate);
+                flag=false;
+
+            }
+
+        }
+
+        return flag;
+    }
+    public static boolean US10()
+    {
+        boolean flag=true;
+        for (Map.Entry mapElement1 : Family.entrySet()) {
+            Fami fam=(Fami) mapElement1.getValue();
+            Date marrDate=fam.getMarried();
+            String hID = fam.gethID();
+            Indi husIndi = (Indi) Individual.get(hID);
+            Date husBday = husIndi.getBday();
+            String wID = fam.getwID();
+            Indi wifeIndi = (Indi) Individual.get(wID);
+            Date wifeBday = wifeIndi.getBday();
+
+            long diffM = Math.abs(marrDate.getTime() - husBday.getTime());
+            long diff = TimeUnit.DAYS.convert(diffM, TimeUnit.MILLISECONDS);
+            int husDiff = (int) diff / 365;
+
+            long diffMw = Math.abs(marrDate.getTime() - wifeBday.getTime());
+            long diffw = TimeUnit.DAYS.convert(diffMw, TimeUnit.MILLISECONDS);
+            int wifeDiff = (int) diffw / 365;
+
+            Date divDate=fam.getDivorced();
+            if(husDiff < 14 || wifeDiff < 14 )
+            {
+                Errorlist.add("ERROR: FAMILY- US10 "+fam.getFid()+" husband or/and wife age less than 14 on marriage day Husband ID "+hID+" and Wife ID "+wID);
+                flag=false;
+
+            }
+
+        }
+
+        return flag;
+    }
+    public static boolean US17()
+    {
+        boolean flag=true;
+        for (Map.Entry mapElement1 : Family.entrySet()) {
+            Fami fam=(Fami) mapElement1.getValue();
+            String hID = fam.gethID();
+            Indi husIndi = (Indi) Individual.get(hID);
+            String husChldOf = husIndi.getChild();
+            ArrayList<String> husSpouseOf = husIndi.getSpouse();
+            String wID = fam.getwID();
+            Indi wifeIndi = (Indi) Individual.get(wID);
+            String wifeChldOf = wifeIndi.getChild();
+            ArrayList<String> wifeSpouseOf = wifeIndi.getSpouse();
+
+            if(husSpouseOf.contains(wifeChldOf) || wifeSpouseOf.contains(husChldOf))
+            {
+                Errorlist.add("ERROR: FAMILY- US17 "+fam.getFid()+" One of the partner in this family is a child of another ");
+                flag=false;
+
+            }
+
+        }
+
         return flag;
     }
 }
