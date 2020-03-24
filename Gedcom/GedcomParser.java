@@ -2,6 +2,9 @@ package Gedcom;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.Period;
+import java.time.ZoneId;
 import java.util.*;
 import java.io.*;
 import java.util.concurrent.TimeUnit;
@@ -455,11 +458,11 @@ public class GedcomParser {
 
     public void showFamiTable() {
 
-        String align = "| %-7s | %-10s | %-10s | %-10s | %-21s | %-7s | %-21s | %-21s |%n";
+        String align = "| %-7s | %-10s | %-10s | %-10s | %-21s | %-7s | %-21s | %-46s |%n";
         System.out.format("##################################################### FAMILY TABLE #################################################################%n");
-        System.out.format("+---------+------------+------------+------------+-----------------------+---------+-----------------------+-----------------------+%n");
-        System.out.format("+ ID      | Married    | Divorced   | Husband ID | Husband Name          | Wife ID |   Wife Name           | Children              +%n");
-        System.out.format("+---------+------------+------------+------------+-----------------------+---------+-----------------------+-----------------------+%n");
+        System.out.format("+---------+------------+------------+------------+-----------------------+---------+-----------------------+------------------------------------------------+%n");
+        System.out.format("+ ID      | Married    | Divorced   | Husband ID | Husband Name          | Wife ID |   Wife Name           | Children                                       + %n");
+        System.out.format("+---------+------------+------------+------------+-----------------------+---------+-----------------------+------------------------------------------------+%n");
 
         for (Map.Entry mapElement : Family.entrySet()) {
             String key = (String) mapElement.getKey();
@@ -481,7 +484,7 @@ public class GedcomParser {
 //            dtm.addRow(InsertData);
 
         }
-        System.out.format("+---------+------------+------------+------------+-----------------------+---------+-----------------------+-----------------------+%n");
+        System.out.format("+---------+------------+------------+------------+-----------------------+---------+-----------------------+------------------------------------------------+%n");
     }
 
     public static void main(String[] args) {
@@ -489,8 +492,8 @@ public class GedcomParser {
         GedcomParser lr = new GedcomParser();
         try {
             //  M2 ending is erroneous data and M ending is proper data
-            //BufferedReader br = new BufferedReader(new FileReader("Project01_Harishkumar_M.ged"));
-           BufferedReader br = new BufferedReader(new FileReader("Project01_Harishkumar_M2.ged"));
+           // BufferedReader br = new BufferedReader(new FileReader("Project01_Harishkumar_M.ged"));
+           BufferedReader br = new BufferedReader(new FileReader("C:\\Users\\12012\\Desktop\\CS 555\\Project01_Harishkumar_M2.ged"));
             String line = null;
             while ((line = br.readLine()) != null) {
                 lr.process(line);
@@ -499,21 +502,24 @@ public class GedcomParser {
             lr.showIndiTable();
             lr.showFamiTable();
 
-            lr.US05();
-            lr.US06();
-
-            lr.US07();
-            lr.US08();
-
-            lr.US01();
-            lr.US04();
-
-            lr.US02();
-            lr.US03();
-
-            lr.US10();
+			
+			  lr.us05(); lr.us06();
+			  
+			  lr.US07(); lr.US08();
+			  
+			  lr.US01(); lr.US04();
+			  
+			  lr.US02(); lr.US03();
+			 
+            lr.US13();
+            lr.US14();
+            lr.US09();
+            lr.US12();
+            lr.US16();
+            lr.US18();
             lr.US17();
-
+            lr.US10();
+            
             for (String str : Errorlist) {
                 System.out.println(str);
             }
@@ -525,7 +531,7 @@ public class GedcomParser {
 
     }
 
-    public static boolean US05() {
+    public static boolean us05() {
 
         boolean flag = true;
         for (Map.Entry mapElement : Family.entrySet()) {
@@ -557,7 +563,7 @@ public class GedcomParser {
         return flag;
     }
 
-    public static boolean US06() {
+    public static boolean us06() {
 
         boolean flag = true;
         for (Map.Entry mapElement : Family.entrySet()) {
@@ -740,6 +746,193 @@ public class GedcomParser {
 
         return flag;
     }
+    public static boolean US13()
+    {
+    	boolean flag=true;
+    	for(Map.Entry mapElement1 : Family.entrySet())
+    	{
+    		Fami fam=(Fami) mapElement1.getValue();
+    		ArrayList<String> childs=fam.getcSet();
+    		if(childs.size()>1)
+    		{
+    			for(int i=0;i<childs.size();i++)
+    			{
+    				for(int j=i+1;j<childs.size()-1;j++)		
+    				{
+    	    			if(Period.between(Instant.ofEpochMilli(Individual.get(childs.get(i)).getBday().getTime()).atZone(ZoneId.systemDefault()).toLocalDate(),Instant.ofEpochMilli(Individual.get(childs.get(j)).getBday().getTime()).atZone(ZoneId.systemDefault()).toLocalDate()).getMonths()<8 && Period.between(Instant.ofEpochMilli(Individual.get(childs.get(i)).getBday().getTime()).atZone(ZoneId.systemDefault()).toLocalDate(),Instant.ofEpochMilli(Individual.get(childs.get(j)).getBday().getTime()).atZone(ZoneId.systemDefault()).toLocalDate()).getDays() >=2)
+    	    			{
+    	                    Errorlist.add("ERROR: FAMILY: US13: Siblings "+Individual.get(childs.get(i)).getName()+" & "+Individual.get(childs.get(j)).getName()+" are born within 8 months");
+    	                    flag=false;
+    	    			}
+    	    			else if(Period.between(Instant.ofEpochMilli(Individual.get(childs.get(i)).getBday().getTime()).atZone(ZoneId.systemDefault()).toLocalDate(),Instant.ofEpochMilli(Individual.get(childs.get(j)).getBday().getTime()).atZone(ZoneId.systemDefault()).toLocalDate()).getDays()>2)
+    	    			{
+    	                    Errorlist.add("ERROR: FAMILY: US13: Siblings "+Individual.get(childs.get(i)).getName()+" & "+Individual.get(childs.get(j)).getName()+" are born after 2 days");
+    	                    flag=false;
+    	    			}
+
+    				}
+    			}
+    		}
+    	}
+    return flag;
+    }
+    public static boolean US14()
+    {
+    	boolean flag=true;
+    	for(Map.Entry mapElement1 : Family.entrySet())
+    	{
+    		int count=0;
+    		Fami fam=(Fami) mapElement1.getValue();
+    		ArrayList<String> childs=fam.getcSet();
+    		if(childs.size()>5)
+    			for(int i=0;i<childs.size();i++)
+    			{
+    				for(int j=i+1;j<childs.size()-1;j++)		
+    				{
+    					if(Individual.get(childs.get(i)).getBday().equals(Individual.get(childs.get(j)).getBday()))
+    	    			{
+    						count++;
+    	    			}
+    				}    				   
+    			}
+    			if(count>5)
+	    		{
+	                Errorlist.add("ERROR: FAMILY: US14 More than 5 siblings are born together in "+fam.getFid());
+	                flag=false;
+
+	    		}
+    		}
+    		
+    	
+    	return flag;
+    }
+    public static boolean US12()
+    {
+    	boolean flag=true;
+    	for(Map.Entry mapElement1 : Family.entrySet())
+    	{
+    		Fami fam=(Fami) mapElement1.getValue();
+    		ArrayList<String> childs=fam.getcSet();
+    		String husb=fam.gethID();
+    		String wife=fam.getwID();
+    		Indi father=Individual.get(husb);
+    		Indi mother=Individual.get(wife);
+    		Date fatherBday=father.getBday();
+    		Date motherBday=mother.getBday();
+    		for(String s:childs)
+    		{
+    			Indi ind=Individual.get(s);
+    			Period cal1=Period.between(Instant.ofEpochMilli(fatherBday.getTime()).atZone(ZoneId.systemDefault()).toLocalDate(),Instant.ofEpochMilli(ind.getBday().getTime()).atZone(ZoneId.systemDefault()).toLocalDate());
+    			Period cal2=Period.between(Instant.ofEpochMilli(motherBday.getTime()).atZone(ZoneId.systemDefault()).toLocalDate(),Instant.ofEpochMilli(ind.getBday().getTime()).atZone(ZoneId.systemDefault()).toLocalDate());
+    			if(cal1.getYears()>80)
+    			{
+                    Errorlist.add("ERROR: FAMILY- US12 "+fam.getFid()+"Father "+father.getId()+" is more than 80 years older than his child"+ind.getId());
+                    flag=false;
+    			}
+    			if(cal2.getYears()>60)
+    			{
+                    Errorlist.add("ERROR: FAMILY- US12 "+fam.getFid()+"Mother "+mother.getId()+" is more than 80 years older than his child"+ind.getId());
+                    flag=false;
+    			}
+    		}
+    		
+    	
+    	}
+    	
+    	return flag;
+    	
+    }
+    public static Boolean US18()
+    {
+    	boolean flag=true;
+    	for(Map.Entry mapElement1 : Family.entrySet())
+    	{
+    		Fami fam=(Fami) mapElement1.getValue();
+    		String fID=fam.getFid();
+    		
+    		ArrayList<String> childs=fam.getcSet();
+    		for(int i=0;i<childs.size();i++)
+    		{
+    			ArrayList<String> spouses=Individual.get(childs.get(i)).getSpouse();
+    			for(int j=i+1;j<spouses.size()-1;j++)
+    			{
+    				ArrayList<String> common=spouses;
+    				//boolean f=spouses.retainAll(Individual.get(childs.get(i)).getSpouse());
+    				//System.out.println("boolean"+f);
+    				common.retainAll(Individual.get(childs.get(i)).getSpouse());
+    				if(common.size()>0)
+    				{    				
+                    Errorlist.add("ERROR: FAMILY- US18 "+fam.getFid()+"Two siblings are married to each other");
+                    flag=false;
+    				}
+    			}
+    		}
+    		
+    		
+    }
+    	return flag;
+    }
+    public static boolean US09()
+    {
+    	boolean flag=true;
+    	for(Map.Entry mapElement1 : Family.entrySet())
+    	{
+    		Fami fam=(Fami) mapElement1.getValue();
+    		ArrayList<String> childs=fam.getcSet();
+    		String husb=fam.gethID();
+    		String wife=fam.getwID();
+    		Indi father=Individual.get(husb);
+    		Indi mother=Individual.get(wife);
+    		Date fatherDday=father.getDeath();
+    		Date motherDday=mother.getDeath();
+    		
+    		for(String s: childs)
+    		{
+    			Indi ind=Individual.get(s);
+    			if(motherDday!=null && motherDday.before(ind.getBday()))
+    			{
+                    Errorlist.add("ERROR: FAMILY: US09: "+ind.getId()+"BirthDay "+ind.getBday()+" is after Mothers death "+motherDday);
+                    flag=false;
+    			}
+    			if(fatherDday!=null && Period.between(Instant.ofEpochMilli(fatherDday.getTime()).atZone(ZoneId.systemDefault()).toLocalDate(),Instant.ofEpochMilli(ind.getBday().getTime()).atZone(ZoneId.systemDefault()).toLocalDate()).getMonths()>9)
+    			{
+                    Errorlist.add("ERROR: FAMILY: US09 "+ind.getId()+"BirthDay "+ind.getBday()+" is after 9 months of Fathers death "+fatherDday);
+                    flag=false;
+    			}
+    			
+    			
+    		}
+    		
+    		
+    	}
+    	return flag;
+    	
+    }
+    
+   
+    public static boolean US16()
+    {
+    	boolean flag=true;
+    	for(Map.Entry mapElement1 : Family.entrySet())
+    	{
+    		Fami fam=(Fami) mapElement1.getValue();
+    		ArrayList<String> childs=fam.getcSet();
+    		String husbName=fam.gethName();
+    		String surName=husbName.substring(husbName.lastIndexOf(" ")+1);
+    		for(String s:childs)
+    		{
+    			if(Individual.get(s).getGender().equals("M") && !Individual.get(s).getName().substring(Individual.get(s).getName().lastIndexOf(" ")+1).equals(surName))
+    			{
+                    Errorlist.add("ERROR: FAMILY: US16 Child "+Individual.get(s).getId()+" has a different last name than the family name "+surName);
+                    flag=false;
+    			}
+    		}
+    	
+    	}
+    	return false;
+    
+    
+}
     public static boolean US10()
     {
         boolean flag=true;
@@ -798,4 +991,5 @@ public class GedcomParser {
 
         return flag;
     }
+   
 }
