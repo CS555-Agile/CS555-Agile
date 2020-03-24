@@ -513,6 +513,10 @@ public class GedcomParser {
 
             lr.US02();
             lr.US03();
+            lr.US09();
+            
+            lr.US16();
+            lr.US18();
 
             for (String str : Errorlist) {
                 System.out.println(str);
@@ -740,42 +744,9 @@ public class GedcomParser {
 
         return flag;
     }
-    public static boolean US12()
-    {
-    	boolean flag=true;
-    	for(Map.Entry mapElement1 : Family.entrySet())
-    	{
-    		Fami fam=(Fami) mapElement1.getValue();
-    		ArrayList<String> childs=fam.getcSet();
-    		String husb=fam.gethID();
-    		String wife=fam.getwID();
-    		Indi father=Individual.get(husb);
-    		Indi mother=Individual.get(wife);
-    		Date fatherBday=father.getBday();
-    		Date motherBday=mother.getBday();
-    		for(String s:childs)
-    		{
-    			Indi ind=Individual.get(s);
-    			Period cal1=Period.between(Instant.ofEpochMilli(fatherBday.getTime()).atZone(ZoneId.systemDefault()).toLocalDate(),Instant.ofEpochMilli(ind.getBday().getTime()).atZone(ZoneId.systemDefault()).toLocalDate());
-    			Period cal2=Period.between(Instant.ofEpochMilli(motherBday.getTime()).atZone(ZoneId.systemDefault()).toLocalDate(),Instant.ofEpochMilli(ind.getBday().getTime()).atZone(ZoneId.systemDefault()).toLocalDate());
-    			if(cal1.getYears()>80)
-    			{
-                    Errorlist.add("ERROR: FAMILY- US12 "+fam.getFid()+"Father "+father.getId()+" is more than 80 years older than his child");
-                    flag=false;
-    			}
-    			if(cal2.getYears()>60)
-    			{
-                    Errorlist.add("ERROR: FAMILY- US12 "+fam.getFid()+"Mother "+mother.getId()+" is more than 80 years older than his child");
-                    flag=false;
-    			}
-    		}
-    		
-    	
-    	}
-    	
-    	return flag;
-    	
-    }
+    
+
+    
     public static Boolean US18()
     {
     	boolean flag=true;
@@ -786,7 +757,7 @@ public class GedcomParser {
     		ArrayList<String> childs=fam.getcSet();
     		for(String s:childs)
     		{
-    			if(Individual.get(s).equals(fID))
+    			if(Individual.get(s).getSpouse()!=null && Individual.get(s).getSpouse().equals(fID))
     			{
                     Errorlist.add("ERROR: FAMILY- US18 "+fam.getFid()+"Two siblings are married to each other");
                     flag=false;
@@ -797,4 +768,65 @@ public class GedcomParser {
     }
     	return flag;
     }
+    public static boolean US09()
+    {
+    	boolean flag=true;
+    	for(Map.Entry mapElement1 : Family.entrySet())
+    	{
+    		Fami fam=(Fami) mapElement1.getValue();
+    		ArrayList<String> childs=fam.getcSet();
+    		String husb=fam.gethID();
+    		String wife=fam.getwID();
+    		Indi father=Individual.get(husb);
+    		Indi mother=Individual.get(wife);
+    		Date fatherDday=father.getDeath();
+    		Date motherDday=mother.getDeath();
+    		
+    		for(String s: childs)
+    		{
+    			Indi ind=Individual.get(s);
+    			if(motherDday!=null && motherDday.before(ind.getBday()))
+    			{
+                    Errorlist.add("ERROR: FAMILY: US09: "+ind.getId()+"BirthDay "+ind.getBday()+" is after Mothers death "+motherDday);
+                    flag=false;
+    			}
+    			if(fatherDday!=null && Period.between(Instant.ofEpochMilli(fatherDday.getTime()).atZone(ZoneId.systemDefault()).toLocalDate(),Instant.ofEpochMilli(ind.getBday().getTime()).atZone(ZoneId.systemDefault()).toLocalDate()).getMonths()>9)
+    			{
+                    Errorlist.add("ERROR: FAMILY: US09 "+ind.getId()+"BirthDay "+ind.getBday()+" is after 9 months of Fathers death "+fatherDday);
+                    flag=false;
+    			}
+    			
+    			
+    		}
+    		
+    		
+    	}
+    	return flag;
+    	
+    }
+    
+   
+    public static boolean US16()
+    {
+    	boolean flag=true;
+    	for(Map.Entry mapElement1 : Family.entrySet())
+    	{
+    		Fami fam=(Fami) mapElement1.getValue();
+    		ArrayList<String> childs=fam.getcSet();
+    		String husbName=fam.gethName();
+    		String surName=husbName.substring(husbName.lastIndexOf(" ")+1);
+    		for(String s:childs)
+    		{
+    			if(Individual.get(s).getGender().equals("M") && !Individual.get(s).getName().substring(Individual.get(s).getName().lastIndexOf(" ")+1).equals(surName))
+    			{
+                    Errorlist.add("ERROR: FAMILY: US16 Child "+Individual.get(s).getId()+" has a different last name than the family name "+surName);
+                    flag=false;
+    			}
+    		}
+    	
+    	}
+    	return false;
+    
+    
+}
 }
