@@ -89,4 +89,18 @@ public class GedcomParserTest {
 //          e.printStackTrace();
 //      }
     }
+    void test_us20(){
+//      try {
+        assertEquals(true, GedcomParser.US20(), "User story 20 failed!");
+//      } catch (ParseException e) {
+//          e.printStackTrace();
+//      }
+    }
+    void test_us25(){
+//      try {
+        assertEquals(true, GedcomParser.US25(), "User story 25 failed!");
+//      } catch (ParseException e) {
+//          e.printStackTrace();
+//      }
+    }
 }
