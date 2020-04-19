@@ -1240,7 +1240,7 @@ public class GedcomParser {
 
     public static boolean US29() {
         boolean flag = true;
-        ListU29.add("\n List of Deceased Individuals are below :");
+        ListU29.add("\nUS29: List of Deceased Individuals are below :");
         for (Map.Entry mapElement1 : Individual.entrySet()) {
             Indi indi = (Indi) mapElement1.getValue();
 
@@ -1255,7 +1255,7 @@ public class GedcomParser {
 
     public static boolean US34() {
         boolean flag = true;
-        ListU34.add("\n List of Large Age differences seen in Family during Marriage date are below :");
+        ListU34.add("\nUS34: List of Large Age differences seen in Family during Marriage date are below :");
         for (Map.Entry mapElement1 : Family.entrySet()) {
             Fami fam = (Fami) mapElement1.getValue();
             Date MarrDate = fam.getMarried();
