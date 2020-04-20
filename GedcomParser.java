@@ -1,8 +1,12 @@
 package Gedcom;
 
+import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.Duration;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.Period;
 import java.time.ZoneId;
 import java.util.*;
@@ -40,6 +44,18 @@ public class GedcomParser {
     Indi Indiobj = null;
     Fami Famobj = null;
     private static ArrayList<String> Errorlist = new ArrayList<String>();
+    private static ArrayList<String> ListU29 = new ArrayList<String>();
+    private static ArrayList<String> ListU30 = new ArrayList<String>();
+    private static ArrayList<String> ListU31 = new ArrayList<String>();
+    private static ArrayList<String> ListU34 = new ArrayList<String>();
+    private static ArrayList<String> ListU35 = new ArrayList<String>();
+    private static ArrayList<String> ListU36 = new ArrayList<String>();
+    private static ArrayList<String> listU32 = new ArrayList<String>();
+    private static ArrayList<String> month31=new ArrayList<String>(Arrays.asList("JAN","MAR","MAY","JUL","AUG","OCT","DEC"));
+    private static ArrayList<String> month30=new ArrayList<String>(Arrays.asList("APR","JUN","SEP","NOV"));
+    
+
+    static boolean check=false;
 
     private static class Indi {
 
@@ -230,58 +246,158 @@ public class GedcomParser {
     }
     public static boolean siblingCheck(String s1,String s2)
     {
-    	
-    	boolean flag=true;
-    	Indi I1=Individual.get(s1);
-    	Indi I2=Individual.get(s2);
-    	if(!I1.getChild().equals(I2.getChild()) || I1.getChild().equals("NA") || I2.getChild().equals("NA"))		
-    	{	
-    		
-    		flag=false;
-    	}
-    	
-    	return flag;
+
+        boolean flag=true;
+        Indi I1=Individual.get(s1);
+        Indi I2=Individual.get(s2);
+        if(!I1.getChild().equals(I2.getChild()) || I1.getChild().equals("NA") || I2.getChild().equals("NA"))
+        {
+
+            flag=false;
+        }
+
+        return flag;
     }
     public static ArrayList<String> getParents(String I1)
     {
-    	ArrayList<String> Parents=new ArrayList<String>();
-    	if(!Individual.get(I1).getChild().equals("NA"))
-    	{
-    		//System.out.println("inside get parents");
-    		Fami fam=Family.get(Individual.get(I1).getChild());
-			/*
-			 * System.out.println(Individual.get(I1).getName());
-			 * System.out.println(fam.gethName()); System.out.println(fam.getwName());
-			 */
-    		Parents.add(fam.gethID());
-    		Parents.add(fam.getwID());
-    	}
-		/*
-		 * else { Parents.add("No Father"); Parents.add("No mother"); }
-		 */
-    	return Parents;
+        ArrayList<String> Parents=new ArrayList<String>();
+        if(!Individual.get(I1).getChild().equals("NA"))
+        {
+            //System.out.println("inside get parents");
+            Fami fam=Family.get(Individual.get(I1).getChild());
+            /*
+             * System.out.println(Individual.get(I1).getName());
+             * System.out.println(fam.gethName()); System.out.println(fam.getwName());
+             */
+            Parents.add(fam.gethID());
+            Parents.add(fam.getwID());
+        }
+        /*
+         * else { Parents.add("No Father"); Parents.add("No mother"); }
+         */
+        return Parents;
     }
     public static boolean firstCousinCheck(String s1,String s2)
     {
-    	
-    	boolean flag=false;
-    	ArrayList<String> p1=getParents(s1);
-    	ArrayList<String> p2=getParents(s2);
-    	if(siblingCheck(s1, s2))
+
+        boolean flag=false;
+        ArrayList<String> p1=getParents(s1);
+        ArrayList<String> p2=getParents(s2);
+        if(siblingCheck(s1, s2))
+        {
+            return false;
+        }
+        for(int i=0;i<p1.size();i++)
+        {
+            for(int j=0;j<p2.size();j++)
+            {
+                if(siblingCheck(p1.get(i), p2.get(j)))
+                {
+                    flag=true;
+                }
+            }
+        }
+        return flag;
+    }
+    public boolean datecheck(Date date)
+    {
+    	boolean out=true;
+    	Calendar calendar=Calendar.getInstance();
+    	calendar.setTime(date);
+    	boolean leap=false;
+    	if(calendar.get(Calendar.YEAR)%4==0)
     	{
-    		return false;
-    	}
-    	for(int i=0;i<p1.size();i++)
-    	{
-    		for(int j=0;j<p2.size();j++)
+    		if(calendar.get(Calendar.YEAR)%100==0)
     		{
-    			if(siblingCheck(p1.get(i), p2.get(j)))
+    			if(calendar.get(Calendar.YEAR)%400==0)
     			{
-    				flag=true;
+    				leap=true;
+    			}
+    			else
+    			{
+    				leap=false;
+    			}
+    		}
+    		else
+    		{
+    			leap=false;
+    		}
+    	}
+    	
+    	int month=calendar.get(Calendar.MONTH)+1;
+    	int day=calendar.get(Calendar.DAY_OF_MONTH);
+    	System.out.println(day);
+    	/*if(month==1 || month==3 || month==5 || month==7 || month==8 || month==10 || month==12)
+    	{
+    		if day()
+    		{
+    			
+    		}
+    	}
+    	)*/
+    	
+    	
+    	return false;
+    }
+    public boolean dateValid(String value)
+    {
+    	boolean out=true;
+    	String[] date=value.split(" ");
+    	int day=Integer.parseInt(date[0]);
+    	String month=date[1];
+    	int year=Integer.parseInt(date[2]);
+    	boolean leap=false;
+    	if(year%4==0)
+    	{
+    		if(year%100==0)
+    		{
+    			if(year%400==0)
+    			{
+    				leap=true;
+    			}
+    			else
+    			{
+    				leap=false;
+    			}
+    		}
+    		else
+    		{
+    			leap=false;
+    		}
+    	}
+    	if(month31.contains(month))
+    	{
+    		if(day>31|| day<0)
+    		{
+    			
+    			out=false;
+    		}
+    	}
+    	if(month30.contains(month))
+    	{
+    		if(day>30 || day<0)
+    		{
+    			out=false;
+    		}
+    	}
+    	if(month.equals("FEB"))
+    	{
+    		if(leap)
+    		{
+    		if(day>29 || day<0)
+    		{
+    			out=false;
+    		}
+    		}
+    		else
+    		{
+    			if(day>28||day<0)
+    			{
+    				out=false;
     			}
     		}
     	}
-    	return flag;
+    	return out;
     }
 
     private void process(String line) {
@@ -291,7 +407,6 @@ public class GedcomParser {
         String valid = "N";
         String output;
         splits = line.split(" ", 3);
-
 
         if (GedMap.containsKey(splits[1])) {
             if (GedMap.get(splits[1]).equals(splits[0])) {
@@ -328,10 +443,24 @@ public class GedcomParser {
                     output = "<-- " + splits[0] + "|" + splits[2] + "|" + valid + "|" + splits[1];
                     if (splits[2].equals("INDI")) {
                         String id = splits[1];
-                        Indiobj = new Indi(splits[1]);
-                        Individual.put(id, Indiobj);
+                        if(Individual.containsKey(id))
+                        {
+                            check=true;
+                            Errorlist.add("ERROR: INDIVIDUAL: US22 "+id+" Already exists");
+                        }
+                        else
+                        {
+                            Indiobj = new Indi(splits[1]);
+                            Individual.put(id, Indiobj);
+                        }
                     } else if (splits[2].equals("FAM")) {
                         String fam = splits[1];
+                        if(Family.containsKey(fam))
+                        {
+                            check=true;
+                            Errorlist.add("ERROR: FAMILY: US22 "+fam+" Already exists");
+
+                        }
                         Famobj = new Fami(splits[1]);
                         Family.put(fam, Famobj);
                     }
@@ -364,15 +493,23 @@ public class GedcomParser {
 
         if (birt) {
             birt = false;
+            if(dateValid(value))
+            {
             SimpleDateFormat f = new SimpleDateFormat("dd MMM yyyy");
             Date bday = f.parse(value);
             birthday = bday;
             Indiobj.setBday(bday);
+            
             Date c = new Date();
             long diffM = Math.abs(c.getTime() - bday.getTime());
             long diff = TimeUnit.DAYS.convert(diffM, TimeUnit.MILLISECONDS);
             int years = (int) diff / 365;
             Indiobj.setAge("" + years + "");
+            }
+            else
+            {
+            	Errorlist.add("ERROR US42: Rejecting the date "+value+" as it is Illegitimate");
+            }
         }
 
         if (tag.equals("BIRT")) {
@@ -380,15 +517,33 @@ public class GedcomParser {
         }
 
         if (deat) {
+        	if(dateValid(value))
+        	{
             deat = false;
             SimpleDateFormat f = new SimpleDateFormat("dd MMM yyyy");
             Date deatDay = f.parse(value);
             Indiobj.setDeathDay(deatDay);
+            if(Indiobj.getBday()!=null)
+            {	
             Date birthday = Indiobj.getBday();
             long diffM = Math.abs(birthday.getTime() - deatDay.getTime());
             long diff = TimeUnit.DAYS.convert(diffM, TimeUnit.MILLISECONDS);
             int years = (int) diff / 365;
             Indiobj.setAge("" + years + "");
+        	}
+            else
+            {
+            	int years=0;
+                Indiobj.setAge("" + years + "");
+
+            	
+            }
+        	}
+        	else
+        	{
+            	Errorlist.add("US42: Rejecting the date "+value+" as it is Illegitimate");
+
+        	}
         }
 
         if (tag.equals("DEAT")) {
@@ -424,10 +579,18 @@ public class GedcomParser {
         }
 
         if (married) {
+        	if(dateValid(value))
+        	{
             married = false;
             SimpleDateFormat f = new SimpleDateFormat("dd MMM yyyy");
             Date marrDt = f.parse(value);
             Famobj.setMarried(marrDt);
+        	}
+        	else
+        	{
+            	Errorlist.add("US42: Rejecting the date "+value+" as it is Illegitimate");
+
+        	}
         }
 
         if (tag.equals("MARR")) {
@@ -435,11 +598,20 @@ public class GedcomParser {
         }
 
         if (divorced) {
+        	if(dateValid(value))
+        	{
             divorced = false;
             SimpleDateFormat f = new SimpleDateFormat("dd MMM yyyy");
             Date divDt = f.parse(value);
             Famobj.setDivorced(divDt);
+        	}
+        	else
+        	{
+            	Errorlist.add("ERROR:US42: Rejecting the date "+value+" as it is Illegitimate");
+
+        	}
         }
+        	
 
         if (tag.equals("DIV")) {
             divorced = true;
@@ -516,14 +688,14 @@ public class GedcomParser {
         System.out.format("+---------+------------+------------+------------+-----------------------+---------+-----------------------+------------------------------------------------+%n");
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws ParseException {
 
         GedcomParser lr = new GedcomParser();
         try {
             //  M2 ending is erroneous data and M ending is proper data
             //BufferedReader br = new BufferedReader(new FileReader("Project01_Harishkumar_M.ged"));
-            //BufferedReader br = new BufferedReader(new FileReader("Project01_Harishkumar_M2.ged"));
-            BufferedReader br = new BufferedReader(new FileReader("C:\\Users\\12012\\Desktop\\CS 555\\Project01_Harishkumar_M2.ged"));
+            BufferedReader br = new BufferedReader(new FileReader("C:\\Users\\12012\\Desktop\\CS 555\\Project01_Harishkumar_M3.ged"));
+            //BufferedReader br = new BufferedReader(new FileReader("C:\\Users\\12012\\Desktop\\CS 555\\Project01_Harishkumar_M3.ged"));
             String line = null;
             while ((line = br.readLine()) != null) {
                 lr.process(line);
@@ -553,13 +725,37 @@ public class GedcomParser {
             lr.US18();
             lr.US17();
             lr.US10();
-            
+            lr.US22();
+            lr.US23();
+            lr.US20();
+            lr.US25();
             lr.US21();
             lr.US24();
-           
+            lr.US19();
+            lr.US26();
+
+            lr.US30();
+            lr.US31();
+
+
             for (String str : Errorlist) {
                 System.out.println(str);
             }
+
+
+
+            
+           
+            
+            for(String str:ListU30)
+            {
+            	System.out.println(str);
+            }
+            for(String str:ListU31)
+            {
+            	System.out.println(str);
+            }
+
         } catch (FileNotFoundException e) {
             System.out.println("File not Found" + e);
         } catch (IOException e) {
@@ -641,12 +837,12 @@ public class GedcomParser {
             ArrayList<String> child = fam.getcSet();
             for (String s : child) {
                 Indi ind = Individual.get(s);
-                if(ind !=null)
+                if(ind !=null && ind.getBday()!=null)
                 {
-                if (ind.getBday().before(marrDate)) {
-                    Errorlist.add("ERROR: FAMILY: US08: " + ind.getId() + " is born before parents Marriage " + marrDate);
-                    flag = false;
-                }
+                    if (ind.getBday().before(marrDate)) {
+                        Errorlist.add("ERROR: FAMILY: US08: " + ind.getId() + " is born before parents Marriage " + marrDate);
+                        flag = false;
+                    }
                 }
                 if (divDate != null) {
                     long diffM = (ind.getBday().getTime() - divDate.getTime());
@@ -684,7 +880,7 @@ public class GedcomParser {
             String IndiId = indi.getId();
             Date birthday = indi.getBday();
             Date deathday = indi.getDeath();
-            if (deathday != null && deathday.before(birthday)) {
+            if (deathday != null && birthday!=null && deathday.before(birthday)) {
                 Errorlist.add("ERROR: INDIVIDUAL: US03: " + indi.getId() + " Deathday " + deathday + " before Birthday " + birthday);
                 flag = false;
 
@@ -724,7 +920,7 @@ public class GedcomParser {
             String IndiId = indi.getId();
             Date birthday = indi.getBday();
             Date deathday = indi.getDeath();
-            if (current.before(birthday)) {
+            if (birthday!=null && current.before(birthday)) {
                 Errorlist.add("ERROR: INDIVIDUAL: US01: " + indi.getId() + "BirthDay " + birthday + " is from future");
                 flag = false;
             }
@@ -830,22 +1026,22 @@ public class GedcomParser {
             Date motherBday = mother.getBday();
             for (String s : childs) {
                 Indi ind = Individual.get(s);
-                if(ind!=null)
+                if(ind!=null && ind.getBday()!=null)
                 {
-                Period cal1 = Period.between(Instant.ofEpochMilli(fatherBday.getTime()).atZone(ZoneId.systemDefault()).toLocalDate(), Instant.ofEpochMilli(ind.getBday().getTime()).atZone(ZoneId.systemDefault()).toLocalDate());
-                Period cal2 = Period.between(Instant.ofEpochMilli(motherBday.getTime()).atZone(ZoneId.systemDefault()).toLocalDate(), Instant.ofEpochMilli(ind.getBday().getTime()).atZone(ZoneId.systemDefault()).toLocalDate());
-                if (cal1.getYears() > 80) {
-                    Errorlist.add("ERROR: FAMILY: US12 " + fam.getFid() + "Father " + father.getId() + " is more than 80 years older than his child" + ind.getId());
-                    flag = false;
+                    Period cal1 = Period.between(Instant.ofEpochMilli(fatherBday.getTime()).atZone(ZoneId.systemDefault()).toLocalDate(), Instant.ofEpochMilli(ind.getBday().getTime()).atZone(ZoneId.systemDefault()).toLocalDate());
+                    Period cal2 = Period.between(Instant.ofEpochMilli(motherBday.getTime()).atZone(ZoneId.systemDefault()).toLocalDate(), Instant.ofEpochMilli(ind.getBday().getTime()).atZone(ZoneId.systemDefault()).toLocalDate());
+                    if (cal1.getYears() > 80) {
+                        Errorlist.add("ERROR: FAMILY: US12 " + fam.getFid() + "Father " + father.getId() + " is more than 80 years older than his child" + ind.getId());
+                        flag = false;
+                    }
+                    if (cal2.getYears() > 60) {
+                        Errorlist.add("ERROR: FAMILY: US12 " + fam.getFid() + "Mother " + mother.getId() + " is more than 80 years older than his child" + ind.getId());
+                        flag = false;
+                    }
                 }
-                if (cal2.getYears() > 60) {
-                    Errorlist.add("ERROR: FAMILY: US12 " + fam.getFid() + "Mother " + mother.getId() + " is more than 80 years older than his child" + ind.getId());
-                    flag = false;
-                }
+
+
             }
-
-
-        }
         }
 
         return flag;
@@ -860,20 +1056,20 @@ public class GedcomParser {
 
             ArrayList<String> childs = fam.getcSet();
             for (int i = 0; i < childs.size(); i++) {
-            	if(Individual.containsKey(childs.get(i)))
-            	{
-                ArrayList<String> spouses = Individual.get(childs.get(i)).getSpouse();
-                for (int j = i + 1; j < spouses.size() - 1; j++) {
-                    ArrayList<String> common = spouses;
-                    //boolean f=spouses.retainAll(Individual.get(childs.get(i)).getSpouse());
-                    //System.out.println("boolean"+f);
-                    common.retainAll(Individual.get(childs.get(i)).getSpouse());
-                    if (common.size() > 0) {
-                        Errorlist.add("ERROR: FAMILY: US18: " + fam.getFid() + " Two siblings are married to each other");
-                        flag = false;
+                if(Individual.containsKey(childs.get(i)))
+                {
+                    ArrayList<String> spouses = Individual.get(childs.get(i)).getSpouse();
+                    for (int j = i + 1; j < spouses.size() - 1; j++) {
+                        ArrayList<String> common = spouses;
+                        //boolean f=spouses.retainAll(Individual.get(childs.get(i)).getSpouse());
+                        //System.out.println("boolean"+f);
+                        common.retainAll(Individual.get(childs.get(i)).getSpouse());
+                        if (common.size() > 0) {
+                            Errorlist.add("ERROR: FAMILY: US18: " + fam.getFid() + " Two siblings are married to each other");
+                            flag = false;
+                        }
                     }
                 }
-            }
             }
 
 
@@ -922,12 +1118,12 @@ public class GedcomParser {
             String husbName = fam.gethName();
             String surName = husbName.substring(husbName.lastIndexOf(" ") + 1);
             for (String s : childs) {
-            	
+
                 if (Individual.containsKey(s)&&Individual.get(s).getGender().equals("M") && !Individual.get(s).getName().substring(Individual.get(s).getName().lastIndexOf(" ") + 1).equals(surName)) {
                     Errorlist.add("ERROR: FAMILY: US16: Child " + Individual.get(s).getId() + " has a different last name than the family name " + surName);
                     flag = false;
                 }
-            
+
             }
 
         }
@@ -991,59 +1187,255 @@ public class GedcomParser {
 
         return flag;
     }
+    public static boolean US22()
+    {
+        boolean flag=true;
+        if(GedcomParser.check)
+        {
+            flag=false;
+        }
+        return flag;
+    }
 
-    
-    //
-    
+    public static boolean US23()
+    {
+        boolean flag=true;
+        TreeMap<String, Indi> t1=new TreeMap<String, GedcomParser.Indi>();
+        t1.putAll(Individual);
+        for(Map.Entry mapElement1:Individual.entrySet())
+        {
+            Indi ind=(Indi) mapElement1.getValue();
+            for(Map.Entry mapElement2:t1.entrySet())
+            {
+                if(!mapElement1.getKey().equals(mapElement2.getKey()) && mapElement1.getKey().toString().compareTo(mapElement2.getKey().toString())<0)
+                {
+                    Indi ind2=(Indi) mapElement2.getValue();
+
+                    if(ind.getName().equals(ind2.getName())&&ind.getBday().equals(ind2.getBday()))
+                    {
+                        Errorlist.add("ERROR: INDIVIDUAL: US23: Two people "+ind.getId()+" & "+ind2.getId()+" with same name and same Bday found ");
+
+                    }
+                }
+            }
+
+        }
+
+        return flag;
+    }
+    public static boolean US25() {
+        boolean flag = true;
+        for (Map.Entry mapElement1 : Family.entrySet()) {
+            Fami fam = (Fami) mapElement1.getValue();
+            ArrayList<String> Children = fam.getcSet();
+
+            for (int i = 0; i < Children.size(); i++) {
+                String child1ID = Children.get(i);
+
+
+                Indi child1Indi = (Indi) Individual.get(child1ID);
+                for (int j = i + 1; j < Children.size()-1; j++) {
+                    String child2ID = Children.get(j);
+                    Indi child2Indi = (Indi) Individual.get(child2ID);
+                    if (child1Indi.getName().equals(child2Indi.getName())) {
+                        //System.out.println(child1Indi.getName() +" "+child2Indi.getName());
+                        Errorlist.add("ERROR: FAMILY: US25: " + fam.getFid() + " Children " + child1ID + " " + child2ID + " have same first name and Birthday ");
+                        flag = false;
+
+                    }
+                }
+            }
+
+        }
+        return flag;
+    }
+
+    public static boolean US20() {
+        boolean flag = true;
+        for (Map.Entry mapElement1 : Family.entrySet()) {
+            Fami fam = (Fami) mapElement1.getValue();
+            String hId = fam.hID;
+            String wId = fam.wID;
+            Indi hIdIndi = (Indi) Individual.get(hId);
+            Indi wIdIndi = (Indi) Individual.get(wId);
+            String hChildOf = hIdIndi.getChild();
+            String wChildOf = wIdIndi.getChild();
+            String na = "NA";
+            if (hChildOf.equals(na) || wChildOf.equals(na)) {
+                continue;
+            } else {
+                Fami hFam = Family.get(hChildOf);
+                Fami wFam = (Fami) Family.get(wChildOf);
+                ArrayList<String> hFamChildren = hFam.getcSet();
+                ArrayList<String> wFamChildren = wFam.getcSet();
+
+                if (hFamChildren.contains(wFam.wID) || hFamChildren.contains(wFam.hID)) {
+                    Errorlist.add("ERROR: FAMILY: US20: " + fam.getFid() + " One partner "+ hId+" is aunt/uncle of another "+wId);
+                    flag = false;
+                }
+
+                if (wFamChildren.contains(hFam.wID) || wFamChildren.contains(hFam.hID)) {
+                    Errorlist.add("ERROR: FAMILY: US20: " + fam.getFid() + " One partner "+ wId+" is aunt/uncle of another "+hId);
+                    flag = false;
+                }
+            }
+
+        }
+        return flag;
+    }
     public static boolean US21()
     {
-    	boolean flag=true;
-    	for (Map.Entry mapElement1 : Family.entrySet()) {
+        boolean flag=true;
+        for (Map.Entry mapElement1 : Family.entrySet()) {
             Fami fam = (Fami) mapElement1.getValue();
             if(!Individual.get(fam.gethID()).getGender().equals("M"))
             {
-            	flag=false;
-            	Errorlist.add("ERROR:FAMILY :US21 Husband "+fam.gethID()+" should be male instead of female");            	
+                flag=false;
+                Errorlist.add("ERROR:FAMILY :US21 Husband "+fam.gethID()+" should be male instead of female");
 
             }
             if(!Individual.get(fam.getwID()).getGender().equals("F"))
             {
-            	flag=false;
-            	Errorlist.add("ERROR:FAMILY :US21 Wife "+fam.getwID()+" should be female instead of male");            	
+                flag=false;
+                Errorlist.add("ERROR:FAMILY :US21 Wife "+fam.getwID()+" should be female instead of male");
 
             }
-    	
+
+        }
+        return flag;
+
     }
-    return flag;
-    
-    }
-    
+
     public static boolean US24()
     {
+        boolean flag=true;
+        for(Map.Entry mapElement1:Individual.entrySet())
+        {
+            Indi ind=(Indi)mapElement1.getValue();
+            ArrayList<String> spouse=new ArrayList<String>();
+            spouse=ind.getSpouse();
+            if(!spouse.equals("NA"))
+            {
+                if(spouse.size()>1)
+                {
+                    for(int i=0;i<spouse.size();i++)
+                    {
+                        for(int j=i+1;j<spouse.size()-1;j++)
+                        {
+                            if(Family.get(spouse.get(i)).getMarried().equals(Family.get(spouse.get(j)).getMarried()))
+                            {
+                                Errorlist.add("ERROR:FAMILY :US24 Spouse got married to different people on same date");
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return flag;
+
+    }
+    public static boolean US19() {
+        boolean flag=true;
+        for (Map.Entry mapElement1 : Family.entrySet()) {
+            Fami fam = (Fami) mapElement1.getValue();
+            boolean check=GedcomParser.firstCousinCheck(fam.gethID(), fam.getwID());
+            if(check)
+            {
+                Errorlist.add("ERROR:FAMILY :US19: Husband "+fam.gethID()+" and Wife "+fam.getwID()+" are first cousins");
+            }
+        }
+        return flag;
+    }
+    public static boolean US26(){
+        boolean flag=true;
+        for (Map.Entry mapElement1 : Family.entrySet()) {
+            Fami fam = (Fami) mapElement1.getValue();
+            if(!Individual.containsKey(fam.gethID()))
+            {
+                flag=false;
+                Errorlist.add("ERROR:FAMILY :US26: Record "+fam.gethID()+" doesnt exist in Individual Table");
+
+            }
+            if(!Individual.containsKey(fam.getwID()))
+            {
+                flag=false;
+                Errorlist.add("ERROR:FAMILY :US26: Record "+fam.getwID()+" doesnt exist in Individual Table");
+
+            }
+            ArrayList<String> Children = fam.getcSet();
+            for(String s:Children)
+            {
+                if(!Individual.containsKey(s))
+                {
+                    flag=false;
+                    Errorlist.add("ERROR:FAMILY :US26: Record "+s+" in Family Table doesnt exist in Individual Table");
+
+                }
+            }
+        }
+        for(Map.Entry mapElement2: Individual.entrySet())
+        {
+            Indi ind=(Indi) mapElement2.getValue();
+            if(!ind.getChild().equals("NA"))
+            {
+                if(!Family.containsKey(ind.getChild()))
+                {
+                    flag=false;
+                    Errorlist.add("ERROR:FAMILY :US26: Record "+ind.getChild()+" in Individual Table doesnt exist in Family Table");
+                }
+                ArrayList<String> spouse=ind.getSpouse();
+                for(String s:spouse)
+                {
+                    if(!Family.containsKey(s))
+                    {
+                        flag=false;
+                        Errorlist.add("ERROR:FAMILY :US26: Record "+s+" in Individual Table doesnt exist in Family Table");
+
+                    }
+                }
+            }
+        }
+
+        return flag;
+    }
+    public static boolean US30()
+    {
     	boolean flag=true;
-    	for(Map.Entry mapElement1:Individual.entrySet())
-    	{
-    		Indi ind=(Indi)mapElement1.getValue();
-    		ArrayList<String> spouse=new ArrayList<String>();
-    		spouse=ind.getSpouse();
-    		if(!spouse.equals("NA"))
+        ListU30.add("\nUS30: List of Living Married people are below :");
+        for(Map.Entry entry:Family.entrySet())
+        {
+        	Fami fam=(Fami) entry.getValue();
+        	if(fam.getDivorced()==null && Individual.get(fam.gethID()).getDeath()==null && Individual.get(fam.getwID()).getDeath()==null)
     		{
-    		if(spouse.size()>1)
-    		{
-    			for(int i=0;i<spouse.size();i++)
-    			{
-    				for(int j=i+1;j<spouse.size()-1;j++)
-    				{
-    					if(Family.get(spouse.get(i)).getMarried().equals(Family.get(spouse.get(j)).getMarried()))
-    					{
-    						Errorlist.add("ERROR:FAMILY :US24 Spouse got married to different people on same date");
-    					}
-    				}
-    			}
+        		ListU30.add(Individual.get(fam.gethID()).getName()+" & "+Individual.get(fam.getwID()).getName());
     		}
+
+        }
+        	
+
+    	return flag;
+    }
+
+    public static boolean US31()
+    {
+    	boolean flag=true;
+        ListU30.add("\nUS31: List of people over 30 and never married :");
+    	for(Map.Entry entry:Individual.entrySet())
+    	{
+    		Indi indi=(Indi) entry.getValue();
+    		int age=Integer.parseInt(indi.getAge());
+    		if(age>=30 && indi.getSpouse().size()==0)
+    		{
+    			ListU31.add(indi.getName());
     		}
     	}
     	return flag;
-    
     }
+    
+    
+   
 }
+
+
+    //
+
