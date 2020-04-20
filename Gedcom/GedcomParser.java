@@ -1,8 +1,12 @@
 package Gedcom;
 
+import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.Duration;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.Period;
 import java.time.ZoneId;
 import java.util.*;
@@ -41,7 +45,16 @@ public class GedcomParser {
     Fami Famobj = null;
     private static ArrayList<String> Errorlist = new ArrayList<String>();
     private static ArrayList<String> ListU29 = new ArrayList<String>();
+    private static ArrayList<String> ListU30 = new ArrayList<String>();
+    private static ArrayList<String> ListU31 = new ArrayList<String>();
     private static ArrayList<String> ListU34 = new ArrayList<String>();
+    private static ArrayList<String> ListU35 = new ArrayList<String>();
+    private static ArrayList<String> ListU36 = new ArrayList<String>();
+    private static ArrayList<String> listU32 = new ArrayList<String>();
+    private static ArrayList<String> month31=new ArrayList<String>(Arrays.asList("JAN","MAR","MAY","JUL","AUG","OCT","DEC"));
+    private static ArrayList<String> month30=new ArrayList<String>(Arrays.asList("APR","JUN","SEP","NOV"));
+    
+
     static boolean check=false;
 
     private static class Indi {
@@ -286,6 +299,106 @@ public class GedcomParser {
         }
         return flag;
     }
+    public boolean datecheck(Date date)
+    {
+    	boolean out=true;
+    	Calendar calendar=Calendar.getInstance();
+    	calendar.setTime(date);
+    	boolean leap=false;
+    	if(calendar.get(Calendar.YEAR)%4==0)
+    	{
+    		if(calendar.get(Calendar.YEAR)%100==0)
+    		{
+    			if(calendar.get(Calendar.YEAR)%400==0)
+    			{
+    				leap=true;
+    			}
+    			else
+    			{
+    				leap=false;
+    			}
+    		}
+    		else
+    		{
+    			leap=false;
+    		}
+    	}
+    	
+    	int month=calendar.get(Calendar.MONTH)+1;
+    	int day=calendar.get(Calendar.DAY_OF_MONTH);
+    	System.out.println(day);
+    	/*if(month==1 || month==3 || month==5 || month==7 || month==8 || month==10 || month==12)
+    	{
+    		if day()
+    		{
+    			
+    		}
+    	}
+    	)*/
+    	
+    	
+    	return false;
+    }
+    public boolean dateValid(String value)
+    {
+    	boolean out=true;
+    	String[] date=value.split(" ");
+    	int day=Integer.parseInt(date[0]);
+    	String month=date[1];
+    	int year=Integer.parseInt(date[2]);
+    	boolean leap=false;
+    	if(year%4==0)
+    	{
+    		if(year%100==0)
+    		{
+    			if(year%400==0)
+    			{
+    				leap=true;
+    			}
+    			else
+    			{
+    				leap=false;
+    			}
+    		}
+    		else
+    		{
+    			leap=false;
+    		}
+    	}
+    	if(month31.contains(month))
+    	{
+    		if(day>31|| day<0)
+    		{
+    			
+    			out=false;
+    		}
+    	}
+    	if(month30.contains(month))
+    	{
+    		if(day>30 || day<0)
+    		{
+    			out=false;
+    		}
+    	}
+    	if(month.equals("FEB"))
+    	{
+    		if(leap)
+    		{
+    		if(day>29 || day<0)
+    		{
+    			out=false;
+    		}
+    		}
+    		else
+    		{
+    			if(day>28||day<0)
+    			{
+    				out=false;
+    			}
+    		}
+    	}
+    	return out;
+    }
 
     private void process(String line) {
 
@@ -380,15 +493,23 @@ public class GedcomParser {
 
         if (birt) {
             birt = false;
+            if(dateValid(value))
+            {
             SimpleDateFormat f = new SimpleDateFormat("dd MMM yyyy");
             Date bday = f.parse(value);
             birthday = bday;
             Indiobj.setBday(bday);
+            
             Date c = new Date();
             long diffM = Math.abs(c.getTime() - bday.getTime());
             long diff = TimeUnit.DAYS.convert(diffM, TimeUnit.MILLISECONDS);
             int years = (int) diff / 365;
             Indiobj.setAge("" + years + "");
+            }
+            else
+            {
+            	Errorlist.add("ERROR US42: Rejecting the date "+value+" as it is Illegitimate");
+            }
         }
 
         if (tag.equals("BIRT")) {
@@ -396,15 +517,33 @@ public class GedcomParser {
         }
 
         if (deat) {
+        	if(dateValid(value))
+        	{
             deat = false;
             SimpleDateFormat f = new SimpleDateFormat("dd MMM yyyy");
             Date deatDay = f.parse(value);
             Indiobj.setDeathDay(deatDay);
+            if(Indiobj.getBday()!=null)
+            {	
             Date birthday = Indiobj.getBday();
             long diffM = Math.abs(birthday.getTime() - deatDay.getTime());
             long diff = TimeUnit.DAYS.convert(diffM, TimeUnit.MILLISECONDS);
             int years = (int) diff / 365;
             Indiobj.setAge("" + years + "");
+        	}
+            else
+            {
+            	int years=0;
+                Indiobj.setAge("" + years + "");
+
+            	
+            }
+        	}
+        	else
+        	{
+            	Errorlist.add("US42: Rejecting the date "+value+" as it is Illegitimate");
+
+        	}
         }
 
         if (tag.equals("DEAT")) {
@@ -440,10 +579,18 @@ public class GedcomParser {
         }
 
         if (married) {
+        	if(dateValid(value))
+        	{
             married = false;
             SimpleDateFormat f = new SimpleDateFormat("dd MMM yyyy");
             Date marrDt = f.parse(value);
             Famobj.setMarried(marrDt);
+        	}
+        	else
+        	{
+            	Errorlist.add("US42: Rejecting the date "+value+" as it is Illegitimate");
+
+        	}
         }
 
         if (tag.equals("MARR")) {
@@ -451,11 +598,20 @@ public class GedcomParser {
         }
 
         if (divorced) {
+        	if(dateValid(value))
+        	{
             divorced = false;
             SimpleDateFormat f = new SimpleDateFormat("dd MMM yyyy");
             Date divDt = f.parse(value);
             Famobj.setDivorced(divDt);
+        	}
+        	else
+        	{
+            	Errorlist.add("ERROR:US42: Rejecting the date "+value+" as it is Illegitimate");
+
+        	}
         }
+        	
 
         if (tag.equals("DIV")) {
             divorced = true;
@@ -532,13 +688,13 @@ public class GedcomParser {
         System.out.format("+---------+------------+------------+------------+-----------------------+---------+-----------------------+------------------------------------------------+%n");
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws ParseException {
 
         GedcomParser lr = new GedcomParser();
         try {
             //  M2 ending is erroneous data and M ending is proper data
             //BufferedReader br = new BufferedReader(new FileReader("Project01_Harishkumar_M.ged"));
-            BufferedReader br = new BufferedReader(new FileReader("Project01_Harishkumar_M3.ged"));
+            BufferedReader br = new BufferedReader(new FileReader("C:\\Users\\12012\\Desktop\\CS 555\\Project01_Harishkumar_M3.ged"));
             //BufferedReader br = new BufferedReader(new FileReader("C:\\Users\\12012\\Desktop\\CS 555\\Project01_Harishkumar_M3.ged"));
             String line = null;
             while ((line = br.readLine()) != null) {
@@ -580,6 +736,11 @@ public class GedcomParser {
 
             lr.US29();
             lr.US34();
+            lr.US30();
+            lr.US31();
+            lr.US35();
+            lr.US36();
+            lr.US32();
 
 
             for (String str : Errorlist) {
@@ -593,6 +754,25 @@ public class GedcomParser {
 
             for (String str : ListU34) {
                 System.out.println(str);
+            }
+            for(String str:ListU30) {
+            	System.out.println(str);
+            }
+            for(String str:ListU31) {
+            	System.out.println(str);
+            	
+            }
+            for(String str:ListU35)
+            {
+            	System.out.println(str);
+            }
+            for(String str:ListU36)
+            {
+            	System.out.println(str);
+            }
+            for(String str:listU32)
+            {
+            	System.out.println(str);
             }
 
         } catch (FileNotFoundException e) {
@@ -676,7 +856,7 @@ public class GedcomParser {
             ArrayList<String> child = fam.getcSet();
             for (String s : child) {
                 Indi ind = Individual.get(s);
-                if(ind !=null)
+                if(ind !=null && ind.getBday()!=null)
                 {
                     if (ind.getBday().before(marrDate)) {
                         Errorlist.add("ERROR: FAMILY: US08: " + ind.getId() + " is born before parents Marriage " + marrDate);
@@ -719,7 +899,7 @@ public class GedcomParser {
             String IndiId = indi.getId();
             Date birthday = indi.getBday();
             Date deathday = indi.getDeath();
-            if (deathday != null && deathday.before(birthday)) {
+            if (deathday != null && birthday!=null && deathday.before(birthday)) {
                 Errorlist.add("ERROR: INDIVIDUAL: US03: " + indi.getId() + " Deathday " + deathday + " before Birthday " + birthday);
                 flag = false;
 
@@ -759,7 +939,7 @@ public class GedcomParser {
             String IndiId = indi.getId();
             Date birthday = indi.getBday();
             Date deathday = indi.getDeath();
-            if (current.before(birthday)) {
+            if (birthday!=null && current.before(birthday)) {
                 Errorlist.add("ERROR: INDIVIDUAL: US01: " + indi.getId() + "BirthDay " + birthday + " is from future");
                 flag = false;
             }
@@ -865,7 +1045,7 @@ public class GedcomParser {
             Date motherBday = mother.getBday();
             for (String s : childs) {
                 Indi ind = Individual.get(s);
-                if(ind!=null)
+                if(ind!=null && ind.getBday()!=null)
                 {
                     Period cal1 = Period.between(Instant.ofEpochMilli(fatherBday.getTime()).atZone(ZoneId.systemDefault()).toLocalDate(), Instant.ofEpochMilli(ind.getBday().getTime()).atZone(ZoneId.systemDefault()).toLocalDate());
                     Period cal2 = Period.between(Instant.ofEpochMilli(motherBday.getTime()).atZone(ZoneId.systemDefault()).toLocalDate(), Instant.ofEpochMilli(ind.getBday().getTime()).atZone(ZoneId.systemDefault()).toLocalDate());
@@ -1280,9 +1460,132 @@ public class GedcomParser {
         }
         return flag;
     }
+    public static boolean US30()
+    {
+    	boolean flag=true;
+        ListU30.add("\nUS30: List of Living Married people are below :");
+        for(Map.Entry entry:Family.entrySet())
+        {
+        	Fami fam=(Fami) entry.getValue();
+        	if(fam.getDivorced()==null && Individual.get(fam.gethID()).getDeath()==null && Individual.get(fam.getwID()).getDeath()==null)
+			{
+        		ListU30.add(Individual.get(fam.gethID()).getName()+" & "+Individual.get(fam.getwID()).getName());
+			}
+
+        }
+        	
+
+    	return flag;
+    }
+    
+    public static boolean US31()
+    {
+    	boolean flag=true;
+        ListU30.add("\nUS31: List of people over 30 and never married :");
+    	for(Map.Entry entry:Individual.entrySet())
+    	{
+    		Indi indi=(Indi) entry.getValue();
+    		int age=Integer.parseInt(indi.getAge());
+    		if(age>=30 && indi.getSpouse().size()==0)
+    		{
+    			ListU31.add(indi.getName());
+    		}
+    	}
+    	return flag;
+    }
+    
+    public static boolean US35() throws ParseException
+    {
+    	boolean flag=true;
+    	ListU35.add("\nUS35: List of people born within 30 days");
+    	Date today=new Date();
+    	for(Map.Entry entry:Individual.entrySet())
+    	{
+    		Indi indi=(Indi) entry.getValue();
+    		//Period period=Period.between(bday,today);
+    		if(indi.getBday()!=null)
+    		{
+    		long diff=Math.abs(today.getTime()-indi.getBday().getTime());
+            long dif= TimeUnit.DAYS.convert(diff, TimeUnit.MILLISECONDS);
+    		
+
+    		
+    		//System.out.println(diff+" days");
+    		if(dif<=30)
+    		{
+    			ListU35.add(indi.getName()+" born on "+indi.getBday());
+    		}
+    		}
+    	}
+    	return flag;
+    }
+    
+    public static boolean US36()
+    {
+    	boolean flag=true;
+    	ListU35.add("\nUS36: List of people dead within 30 days");
+    	Date today=new Date();
+    	for(Map.Entry entry:Individual.entrySet())
+    	{
+    		Indi indi=(Indi) entry.getValue();
+    		if(indi.getDeath()!=null)
+    		{
+    		//Period period=Period.between(bday,today);
+    		long diff=Math.abs(today.getTime()-indi.getDeath().getTime());
+            long dif= TimeUnit.DAYS.convert(diff, TimeUnit.MILLISECONDS);
+
+    		
+    		//System.out.println(diff+" days");
+    		if(dif<=30)
+    		{
+    			ListU35.add(indi.getName()+" died on "+indi.getDeath());
+    		}
+    		}
+    	}
+    	
+    	return flag;
+    }
+    public static boolean US32()
+    {
+    	boolean flag=true;
+    	HashMap<String,Date> bday=new HashMap<String, Date>();
+    	ArrayList<Date> og=new ArrayList<Date>();
+    	Set<Date> dup=new HashSet<Date>();    	
+    	listU32.add("\nUS32: List of all people born on the same date");
+    	for(Map.Entry entry: Individual.entrySet())
+    	{
+    		
+    		Indi indi=(Indi)entry.getValue();
+    		Date birthday=indi.getBday();
+    		if(indi.getBday()!=null)
+    		{
+    			
+    			if(og.contains(indi.getBday()))
+    		{
+    			
+    			dup.add(indi.getBday());
+    		}
+    		
+    		og.add(indi.getBday());
+    		bday.put(indi.getId(), indi.getBday());  
+    		}
+    	}
+    	for(Date d:dup)
+    	{
+    		for(Map.Entry entry:bday.entrySet())
+    		{
+    			
+    			if(d.equals(entry.getValue()))
+    			{
+    				listU32.add(Individual.get(entry.getKey()).getName()+" born on "+d);
+    			}
+    		}
+    	}
+    	
+    	return flag;
+    }
+}
 
 
     //
 
-
-}

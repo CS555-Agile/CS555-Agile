@@ -17,7 +17,7 @@ public class GedcomParserTest {
     @Test
     void test_us05(){
 //        try {
-        assertEquals(false, GedcomParser.US05(), "User story 05 failed!");
+            assertEquals(false, GedcomParser.US05(), "User story 05 failed!");
 //        } catch (ParseException e) {
 //            e.printStackTrace();
 //        }
@@ -201,7 +201,6 @@ public class GedcomParserTest {
 //          e.printStackTrace();
 //      }
     }
-
     void test_us29()
     {
 //      try {
@@ -210,7 +209,30 @@ public class GedcomParserTest {
 //          e.printStackTrace();
 //      }
     }
-
+    void test_us30()
+    {
+//      try {
+        assertEquals(true, GedcomParser.US30(), "User story 30 failed!");
+//      } catch (ParseException e) {
+//          e.printStackTrace();
+//      }
+    }
+    void test_us31()
+    {
+//      try {
+        assertEquals(true, GedcomParser.US31(), "User story 31 failed!");
+//      } catch (ParseException e) {
+//          e.printStackTrace();
+//      }
+    }
+    void test_us32()
+    {
+//      try {
+        assertEquals(true, GedcomParser.US32(), "User story 32 failed!");
+//      } catch (ParseException e) {
+//          e.printStackTrace();
+//      }
+    }
     void test_us34()
     {
 //      try {
@@ -219,4 +241,26 @@ public class GedcomParserTest {
 //          e.printStackTrace();
 //      }
     }
+    void test_us35()
+    {
+//      try {
+        try {
+			assertEquals(true, GedcomParser.US35(), "User story 35 failed!");
+		} catch (ParseException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+//      } catch (ParseException e) {
+//          e.printStackTrace();
+//      }
+    }
+    void test_us36()
+    {
+//      try {
+        assertEquals(true, GedcomParser.US36(), "User story 36 failed!");
+//      } catch (ParseException e) {
+//          e.printStackTrace();
+//      }
+    }
 }
+ 
