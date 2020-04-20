@@ -1399,39 +1399,7 @@ public class GedcomParser {
 
         return flag;
     }
-    public static boolean US30()
-    {
-    	boolean flag=true;
-        ListU30.add("\nUS30: List of Living Married people are below :");
-        for(Map.Entry entry:Family.entrySet())
-        {
-        	Fami fam=(Fami) entry.getValue();
-        	if(fam.getDivorced()==null && Individual.get(fam.gethID()).getDeath()==null && Individual.get(fam.getwID()).getDeath()==null)
-			{
-        		ListU30.add(Individual.get(fam.gethID()).getName()+" & "+Individual.get(fam.getwID()).getName());
-			}
-
-        }
-        	
-
-    	return flag;
-    }
     
-    public static boolean US31()
-    {
-    	boolean flag=true;
-        ListU30.add("\nUS31: List of people over 30 and never married :");
-    	for(Map.Entry entry:Individual.entrySet())
-    	{
-    		Indi indi=(Indi) entry.getValue();
-    		int age=Integer.parseInt(indi.getAge());
-    		if(age>=30 && indi.getSpouse().size()==0)
-    		{
-    			ListU31.add(indi.getName());
-    		}
-    	}
-    	return flag;
-    }
     
     public static boolean US35() throws ParseException
     {
@@ -1459,31 +1427,7 @@ public class GedcomParser {
     	return flag;
     }
     
-    public static boolean US36()
-    {
-    	boolean flag=true;
-    	ListU35.add("\nUS36: List of people dead within 30 days");
-    	Date today=new Date();
-    	for(Map.Entry entry:Individual.entrySet())
-    	{
-    		Indi indi=(Indi) entry.getValue();
-    		if(indi.getDeath()!=null)
-    		{
-    		//Period period=Period.between(bday,today);
-    		long diff=Math.abs(today.getTime()-indi.getDeath().getTime());
-            long dif= TimeUnit.DAYS.convert(diff, TimeUnit.MILLISECONDS);
-
-    		
-    		//System.out.println(diff+" days");
-    		if(dif<=30)
-    		{
-    			ListU35.add(indi.getName()+" died on "+indi.getDeath());
-    		}
-    		}
-    	}
-    	
-    	return flag;
-    }
+    
     public static boolean US32()
     {
     	boolean flag=true;
